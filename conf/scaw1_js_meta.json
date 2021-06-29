@@ -1,0 +1,73 @@
+{
+    "attributes": {
+        "conventions"       : "CF-1.8",
+        "title"             : "Surface downwelling flux in air",
+        "institution"       : "TROPOS Leipzig, Germany",
+        "project_mission"   : -1,
+        "platform"          : "Oceanet",
+        "instrument"        : "Scalable weather station",
+        "contact_person" : "???Name of person; mail to:email",
+        "description": "metadata was taken from uv_js_meta.json and data were processed via BTS_main_process.py",
+        "serial_number_instrument" : "???",
+        "file_created" : -1
+    },
+        
+    "dimensions": {
+        "time": -1
+    },  
+          
+    "variables": {
+        "Longitude": {
+            "type": "f4",
+            "shape": ["time"],
+            "data": [],
+            "attributes": {
+                "units": "degrees_east",
+                "long_name" : "Longitude",
+                "standard_name": "Longitude",
+                "valid_range" : [-180.0,180.0]
+            }
+        },
+        "Latitude": {
+            "type": "f4",
+            "shape": ["time"],
+            "data": [],
+            "attributes": {
+                "units": "degrees_north",
+                "long_name" : "Latitude",
+                "standard_name": "Latitude",
+                "valid_range" : [-90.0,90.0]
+            }
+        },
+        "time":{
+            "type": "f8",
+            "shape": ["time"],
+            "data":[],
+            "attributes": {
+                "units": "seconds since 1970-01-01 00:00:00",
+                "standard_name": "Time"
+            }
+         },  
+        "DSR": {
+            "type": "f4",
+            "shape": ["time"],
+            "data":[],
+            "attributes": {
+                "units": "W*m^{-2}",
+                "standard_name": "surface_downwelling_shortwave_flux_in_air",
+                "long_name": "DSR"
+            }
+        },
+        "DLR": {
+            "type": "f4",
+            "shape": ["time"],
+            "data":[],
+            "attributes": {
+                "units": "W*m^{-2}",
+                "standard_name": "surface_downwelling_longwave_flux_in_air",
+                "long_name": "DLR"
+            }
+        }
+    }
+}
+

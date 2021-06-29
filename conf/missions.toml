@@ -1,0 +1,28 @@
+# title = "mission config"
+
+[PS122_1]
+name = "PS122_1"
+description = ""
+platform = "Polarstern"
+project = "Transsect"
+project_desciption = "Transsect"
+datetime_start = 2019-09-20T00:00:00-00:00
+datetime_stopp = 2019-12-13T00:00:00-00:00
+location_start = ""
+location_stopp = ""
+instruments = ["tsi", "hatpro"]
+
+
+[PS122_2]
+name = "PS122_2"
+description = ""
+platform = "Polarstern"
+project = "Transsect"
+project_desciption = "Transsect"
+datetime_start = 1980-05-27T00:32:00-07:00
+datetime_stopp = 1980-06-27T00:32:00-07:00
+location_start = ""
+location_stopp = ""
+instruments = ["hatpro"]
+
+
