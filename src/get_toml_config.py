@@ -131,7 +131,7 @@ def get_missions( instrument_of_interest, logger ):
     
 def add_instrument_pathfilenames(args, cfg):
     # get _dates from mission
-    if (args.selected == "mission"):
+    if (args["selected"] == "mission"):
         for mission in cfg["mission"]:
             dates = cfg["mission"][mission]["_"]["dates"]
 
@@ -168,12 +168,12 @@ def add_instrument_pathfilenames(args, cfg):
 def loop(args, logger):
     nested_dict = None
     
-    if (args.selected == "instrument"):
+    if (args["selected"] == "instrument"):
         logger.info("Instrument was choosed")
-        nested_dict = get_missions( args.name, logger )
-    elif (args.selected == "mission"):
+        nested_dict = get_missions( args["name"], logger )
+    elif (args["selected"] == "mission"):
         logger.info("Mission was choosed")
-        nested_dict = get_instruments( args.name, logger )
+        nested_dict = get_instruments( args["name"], logger )
     else:
         logger.warn("error")
         quit()
@@ -201,8 +201,7 @@ def loop(args, logger):
 #####################################################################################                                                    
 # getting args, setting logger, load configs
 def adjust(argv):
-    print("___")
-    
+
     # get name of directory where main script is located
     current_dirname = os.path.dirname(os.path.realpath(__file__))
     
@@ -212,21 +211,6 @@ def adjust(argv):
     # define log_path_file + create dir
     #log_path_file = current_dirname + "/log/uv_processing.log"
     log_path_file = current_dirname + "/../log/oceanet.log"
-    
-    """for calling the function from the terminal"""
-    parser = argparse.ArgumentParser(description='Oceanet, read config.') 
-    
-    parser.add_argument('-s', required=True, type=str, dest='selected',
-                    choices=['instrument', 'mission'],
-                    help='Focussed on instrument or on mission')
-    parser.add_argument('-n', required=True, type=str, dest='name', # la variable se guarda en args.id como string
-                    help='Insert the name of the instrument or mission')
-
-    parser.add_argument('--loglevel', default='INFO', dest='loglevel',
-                    help="define loglevel of screen INFO (default) | WARNING | ERROR ")
-    #parser.add_argument('--logfile', default=log_path_file, dest='logfile',
-                    #help="define logfile (default: directory where you execute the script) ")
-    args = parser.parse_args()
     
     
     """ Create logger, name important """
@@ -240,7 +224,7 @@ def adjust(argv):
     fh.setLevel(logging.DEBUG)
     
     # create/check level
-    screen_level = logging.getLevelName(args.loglevel)
+    screen_level = logging.getLevelName(argv["loglevel"])
     
     # create console handler with a higher log level
     ch = logging.StreamHandler()
@@ -263,7 +247,7 @@ def adjust(argv):
     logger.info("Start to read config files")
     
     
-    cfg = loop( args, logger )
+    cfg = loop( argv, logger )
     
     logger.info("Finish to read config files")
     
@@ -274,10 +258,31 @@ def adjust(argv):
 if __name__ == "__main__":
     # execute only if run as a script
     print(__file__)
-    adjust(sys.argv[1:])
+    
+    # parse cmd args
+    parser = argparse.ArgumentParser(description='Oceanet, read config.') 
+    
+    parser.add_argument('-s', required=True, type=str, dest='selected',
+                    choices=['instrument', 'mission'],
+                    help='Focussed on instrument or on mission')
+    parser.add_argument('-n', required=True, type=str, dest='name', # la variable se guarda en args.id como string
+                    help='Insert the name of the instrument or mission')
 
-#####################################################################################                                                    
-def run():
-    # execute only if run as a setuptoolscript
-    print(__file__)
-    adjust(sys.argv[1:])
+    parser.add_argument('--loglevel', default='INFO', dest='loglevel',
+                    help="define loglevel of screen INFO (default) | WARNING | ERROR ")
+    #parser.add_argument('--logfile', default=log_path_file, dest='logfile',
+                    #help="define logfile (default: directory where you execute the script) ")
+    args = parser.parse_args()
+    
+    
+    # args to dict
+    thisdict = {
+      "selected": args.selected,
+      "name": args.name,
+      "loglevel": args.loglevel
+    }
+    
+    
+    adjust( thisdict )
+
+

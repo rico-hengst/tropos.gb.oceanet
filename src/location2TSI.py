@@ -4,12 +4,12 @@
 """The script creates a csv-file and contains DatETime/Lat/Lon/Filename of images
 Execution
 ---------
-./location2TSI.py -c PS95
+./location2TSI.py -c PS95 -i tsi
 
 Parameters
 ----------
 Cruise : str
-RootPath :str (optional)
+Instrument :str 
 
 Processing
 ----------
@@ -45,12 +45,18 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import pytz
 
+import get_toml_config
+
+
+""" Create logger, name important """
+module_logger = logging.getLogger('oceanet.tsi')
+
 
 # read location track
 # https://www.datacamp.com/community/tutorials/pandas-read-csv
 # https://realpython.com/python-csv/
 def read_my_file(track_pathfile):
-    logger.info('Read Polarstern track: ' + track_pathfile)
+    module_logger.info('Read Polarstern track: ' + track_pathfile)
     
     filename, file_extension = os.path.splitext(track_pathfile)
     
@@ -68,13 +74,13 @@ def read_my_file(track_pathfile):
             linenumber = linenumber + 1
             if re.search(pattern, line):
                 print(line + ' in line: ' + str(linenumber))
-                logger.info('End of file header detected: ' + track_pathfile)
+                module_logger.info('End of file header detected: ' + track_pathfile)
                 # if detected, break the for loop
                 break
             
             # if no end of header detected, exit script
             if linenumber > 100:
-                logger.warning('No end of file header detected: ' + track_pathfile)
+                module_logger.warning('No end of file header detected: ' + track_pathfile)
                 exit()
         
         df = pd.read_csv(track_pathfile, sep='\t', skiprows = linenumber)
@@ -82,7 +88,7 @@ def read_my_file(track_pathfile):
         df = pd.read_csv(track_pathfile, sep='\t', skiprows = 0, converters={"Date/Time (UTC)": str})
         #print(df[df['Longitude'].apply(lambda x: not isinstance(x, float))])
     else:
-        logger.error('Exit, wrong file extension of track file: ' + filename)
+        module_logger.error('Exit, wrong file extension of track file: ' + filename)
         exit()
     
     # https://doi.pangaea.de/10.1594/PANGAEA.863107?format=html#download
@@ -95,7 +101,7 @@ def read_my_file(track_pathfile):
             df_date_time_column_name = col
     
     if len(df_date_time_column_name) < 5:
-        logger.error('Track file ' + track_pathfile + ' doesnt contain a column with name Date/Time')
+        module_logger.error('Track file ' + track_pathfile + ' doesnt contain a column with name Date/Time')
         exit()
 
     ## convert to timestamp and add new column if not exists
@@ -121,7 +127,7 @@ def read_my_file(track_pathfile):
 # compute interpolation parameters for Lat and Lon
 # https://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
 def get_interpol_parameters(df):
-    logger.info('Compute interpolation parameters of DataFrame lat lon')
+    module_logger.info('Compute interpolation parameters of DataFrame lat lon')
     f2_lat = interp1d(df['diff_seconds'], df['Latitude'], kind='cubic')
     f2_lon = interp1d(df['diff_seconds'], df['Longitude'], kind='cubic')
     
@@ -151,7 +157,7 @@ def get_exposure_datetime(pathfile):
         
         # set timezone to UTC
         exposure_datetime = timezoneUTC.localize(exposure_datetime)
-        #logger.debug('Image DateTime: time is taken from filename and Date is taken from directoryname')
+        #module_logger.debug('Image DateTime: time is taken from filename and Date is taken from directoryname')
         
         
     # datetime is taken from file stat mtime    
@@ -168,10 +174,10 @@ def get_exposure_datetime(pathfile):
         # check if directory date if less equal than 24h than stst mtime
         d =  exposure_datetime - date_from_dir
         if abs( d.seconds ) > 24*60*60:
-            logger.error('DateTime diff between directorydate ' +  dir_last + ' and file mtime > 1 day: ' + str(d.seconds) + ' seconds')
+            module_logger.error('DateTime diff between directorydate ' +  dir_last + ' and file mtime > 1 day: ' + str(d.seconds) + ' seconds')
             quit()
             
-        #logger.debug('Image DateTime is taken from file stat mtime')
+        #module_logger.debug('Image DateTime is taken from file stat mtime')
         
     return dir_last, basename, exposure_datetime
 
@@ -179,33 +185,56 @@ def get_exposure_datetime(pathfile):
 # ! Note: function sorted and glob does'nt return a sorted list, a workaround is required to sort the list of strings
 # files = glob.glob('/home/hengst/scripte/python' + '/**/*.py', recursive=True)
 # files = sorted( glob.glob('/home/hengst/scripte/python' + '/**/*.py', recursive=True), key=os.path.getsize)
-def find_files_to_dfpics(df):
-    logger.info('Find files in directory tree: ' + abs_cruise_path)
+def find_files_to_dfpics(df, args, config):
+    module_logger.info('Find files in directory tree: ' + abs_cruise_path)
     
-    abs_image_dir = abs_cruise_path + 'WOLKENKAMERA/'
     
-    dir_list = os.listdir( abs_image_dir )
-    sorted_image_dirs = sorted(dir_list)
     
-    # add dataframe
+    # get metadata of instrument
+    for x in config["instruments"]:
+        if args.instrument in x:
+            instrument = x[args.instrument]
+    
+    # get metadata of mission
+    mission = config["mission"][args.cruise]
+    
+    # check if dir exists
+    if not (os.path.isdir(instrument["path_level0_fix"])):
+        module_logger.warn('Data directory not exists: ' + instrument["path_level0_fix"])
+        quit()
+        
+        
+        
+     # add dataframe
     dfpics = pd.DataFrame(columns=['DateTime [UTC]', 'File'])
-    
-    # walk through dirs
+        
+
+    # iteration
     index=-1
-    for sorted_image_dir in sorted_image_dirs:
+    for path_filename_level0 in instrument["_path_filenames_level0"]:
         index=index+1
         
+        # name of current diretcory
+        dirname = os.path.dirname(path_filename_level0)
+        
+        # check if directory exists
+        if not (os.path.isdir( dirname )):
+            module_logger.warn('Data sub-directory not exists: ' + dirname)
+            continue
+        
+        # check is direcoty is readable       
+        if not (os.access(dirname, os.R_OK)):
+            module_logger.warning("No read access to path: " + dirname)
+            quit()
+        
         # this test is only for testing the program with less data files
-        if index == 3:
+        if index == 13:
             #break    # break here
             ok = 1
         
-        abs_sorted_image_dir = abs_image_dir + sorted_image_dir + '/'
+        files = sorted( glob.glob( path_filename_level0, recursive=True), key=os.path.realpath )
         
-        # sorting doesnt work properly !!!!!!!!!!
-        files = sorted( glob.glob( abs_sorted_image_dir + '*.JPG', recursive=True), key=os.path.realpath )
-        
-        logger.info('Found {0:4d} image files in directory {1:20s}'.format(len(files), abs_sorted_image_dir) )
+        module_logger.info('Found {0:4d} image files in directory {1:20s}'.format(len(files), path_filename_level0) )
 
         #https://thispointer.com/python-get-list-of-files-in-directory-sorted-by-name/
         #files = sorted( filter( os.path.isfile,\
@@ -217,12 +246,17 @@ def find_files_to_dfpics(df):
             
             if exposure_datetime:
                 dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename}, ignore_index=True)
-                
-    # set dfpics timezone to UTC
-
-    #fmt = '%Y-%m-%d %H:%M:%S %Z%z'
-    #print(dfpics['DateTime [UTC]'].iloc[0].strftime(fmt)  )
-    #print(dfpics['DateTime [UTC]'].iloc[-1].strftime(fmt)  )
+    
+    
+    # check if images are in the dataframe
+    nn = dfpics['DateTime [UTC]'].count()
+    if nn == 0:
+        module_logger.warning('In total no images were found!')
+        quit()
+    else:
+        module_logger.info('In total ' + str(nn) + ' were found.')
+    
+    # set dfpics timezone to UTC)
     
     # convert dfpics to timezone UTC, cause stat mtime has CET timezone
     dfpics['DateTime [UTC]'] = dfpics['DateTime [UTC]'].dt.tz_convert(pytz.timezone('UTC'))
@@ -243,32 +277,32 @@ def find_files_to_dfpics(df):
     # check if NaN exists
     number_nan_values = dfpics.isnull().sum().sum()
     if number_nan_values > 0:
-        logger.error('Warning, {0} NaN values exists in Dataframe'.format(number_nan_values))
+        module_logger.error('Warning, {0} NaN values exists in Dataframe'.format(number_nan_values))
         quit()
         
     return dfpics
     
 # remove records in dfpics dataframe if records not fite in interval of df
 def remove_dfpics_outside(df, dfpics):
-    logger.info('Remove dfpics records outside df period')
+    module_logger.info('Remove dfpics records outside df period')
 
     ## remove row in dataframe pics, if pics.DT out of df.DT
     l_old1 = len(dfpics)
     dfpics = dfpics[ dfpics['DateTime [UTC]'] > df['DateTime [UTC]'].min()  ]
-    logger.info(str(l_old1 - len(dfpics)) + ' records removed')
+    module_logger.info(str(l_old1 - len(dfpics)) + ' records removed')
     
     l_old2 = len(dfpics)
     dfpics = dfpics[ dfpics['DateTime [UTC]'] < df['DateTime [UTC]'].max() ]
-    logger.info(str(l_old2 - len(dfpics)) + ' records removed')
+    module_logger.info(str(l_old2 - len(dfpics)) + ' records removed')
     
-    logger.info('Number of originally collected dfpics records: ' + str(l_old1) )
-    logger.info('Number of remained dfpics records: ' + str(len(dfpics)))
+    module_logger.info('Number of originally collected dfpics records: ' + str(l_old1) )
+    module_logger.info('Number of remained dfpics records: ' + str(len(dfpics)))
     
     return dfpics
     
 # interpolate lat, lon to dfpics dataframe
 def interpolation_dfpics(dfpics, f2_lat, f2_lon):
-    logger.info('Compute interpolation of dfpics')
+    module_logger.info('Compute interpolation of dfpics')
     dfpics['Latitude'] = f2_lat(dfpics['diff_seconds'])
     dfpics['Longitude'] = f2_lon(dfpics['diff_seconds'])
     
@@ -276,8 +310,8 @@ def interpolation_dfpics(dfpics, f2_lat, f2_lon):
     # check if NaN exists
     number_nan_values = dfpics.isnull().sum().sum()
     if number_nan_values > 0:
-        logger.error('Warning, {0} NaN values exists in Dataframe'.format(number_nan_values))
-        logger.error('Maybe number of point in mastertrack is to large {0}, interpolation problem?, please use a mastertrack with less resolution!'.format(len(df['Latitude'])))
+        module_logger.error('Warning, {0} NaN values exists in Dataframe'.format(number_nan_values))
+        module_logger.error('Maybe number of point in mastertrack is to large {0}, interpolation problem?, please use a mastertrack with less resolution!'.format(len(df['Latitude'])))
         quit()
     
     return dfpics
@@ -287,7 +321,7 @@ def interpolation_dfpics(dfpics, f2_lat, f2_lon):
 # plot track
 def plot_me(df, dfpics):
     output_file = args.cruise + "_track.png"
-    logger.info('Plot track to file: ' + output_file)
+    module_logger.info('Plot track to file: ' + output_file)
     
     # get max min lat lon
     lat_max = dfpics['Latitude'].max()
@@ -351,7 +385,7 @@ def plot_me(df, dfpics):
 # write dfpics to output
 def write_file(dfpics):
     output_file =  args.cruise + '_tsi.txt'
-    logger.info('Write dfpics to file: ' + output_file)
+    module_logger.info('Write dfpics to file: ' + output_file)
     dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
     #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f')
 
@@ -370,7 +404,7 @@ def adjust(argv):
     
     # define log_path_file + create dir
     #log_path_file = current_dirname + "/log/uv_processing.log"
-    log_path_file = exec_dirname + "/oceanet.log"
+    #log_path_file = exec_dirname + "/../log/oceanet.log"
     
     
         
@@ -380,6 +414,8 @@ def adjust(argv):
     parser = argparse.ArgumentParser(description='Process oceanet tsi.') 
     parser.add_argument('-c', required=True, type=str, dest='cruise', # la variable se guarda en args.id como string
                     help='Insert the name of the cruise (e.g: PS95 or PS122_1)')
+    parser.add_argument('-i', required=True, type=str, dest='instrument',
+                    help='Name of the instrument')
     parser.add_argument('-p', type=str, dest='root_path', default='/vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/',
                     help='Insert the froot path of the oceanet data (e.g: /vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/')
     parser.add_argument('--loglevel', default='INFO', dest='loglevel',
@@ -387,67 +423,52 @@ def adjust(argv):
     args = parser.parse_args()
     
     
+    #config = get_toml_config.run()
+    l = ["-s", "mission", "-n" , args.cruise]
+    
+    thisdict = {
+      "selected": "mission",
+      "name": args.cruise,
+      "loglevel": "INFO"
+    }
+    print(l)
+    
+    config = get_toml_config.adjust( thisdict )
+    
+    
     
         
-    # create logger with 'UV'
-    logger = logging.getLogger('oceanet tsi')
-    logger.setLevel(logging.DEBUG)
-    
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler( log_path_file )
-    fh.setLevel(logging.DEBUG)
-    
-    # create/check level
-    screen_level = logging.getLevelName(args.loglevel)
-    
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    #ch.setLevel(logging.WARNING)
-    ch.setLevel(screen_level)
-    
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt='%(asctime)s | %(name)-14s | %(levelname)-8s | %(message)s | %(module)s (%(lineno)d)', datefmt='%Y-%m-%d %H:%M:%S',)
-    
-    # add formatter to the handlers
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    
-    # add the handlers to the logger
-    logger.addHandler(fh)
-    logger.addHandler(ch)
     
     # add first log mesage
-    logger.info('Start oceanet tsi processing')
-    
-   
+    module_logger.info('Start oceanet tsi processing')
     
     if args.cruise is None:
-        logger.error('Cruise name is not provided!')
+        module_logger.error('Cruise name is not provided!')
         exit()
     
     if args.root_path is None:
-        logger.error('Root path is not provided!')
+        module_logger.error('Root path is not provided!')
         exit()
         
     
     abs_cruise_path = args.root_path + args.cruise + '/DATA/'
     
     if not os.path.isdir(  abs_cruise_path ):
-        logger.error('Cruise directory not exists: ' + abs_cruise_path)
+        module_logger.error('Cruise directory not exists: ' + abs_cruise_path)
         exit()
     
     
     """Check python version"""
     python_version = platform.python_version().split(".")
     if int(python_version[0]) < 3:
-        logger.error( "Your python version is: " + platform.python_version() )
-        logger.error( "Script will be terminated cause python version < 3 is required !" )
+        module_logger.error( "Your python version is: " + platform.python_version() )
+        module_logger.error( "Script will be terminated cause python version < 3 is required !" )
         exit()
     
     
     
     # return
-    return args, logger, abs_cruise_path
+    return args, abs_cruise_path, config
 
 
 
@@ -457,7 +478,7 @@ if __name__ == "__main__":
     # execute only if run as a script
     print(__file__)
     
-    args, logger, abs_cruise_path = adjust(sys.argv[1:])
+    args, abs_cruise_path, config = adjust(sys.argv[1:])
     
     # set mastertrack_pathfile
     track_pathfile = 'PS95.2_link-to-mastertrack.tab'
@@ -479,7 +500,7 @@ if __name__ == "__main__":
 
     df, df_firstdate = read_my_file(track_pathfile)
     f2_lat, f2_lon = get_interpol_parameters(df)
-    dfpics = find_files_to_dfpics(df)
+    dfpics = find_files_to_dfpics(df, args, config)
 
     dfpics = remove_dfpics_outside(df, dfpics)
     dfpics = interpolation_dfpics(dfpics, f2_lat, f2_lon)
