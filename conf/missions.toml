@@ -5,11 +5,13 @@ name = "PS122_1"
 description = ""
 platform = "Polarstern"
 project = "Transsect"
-project_desciption = "Transsect"
+project_description = "Transsect"
 datetime_start = 2019-09-20T00:00:00-00:00
 datetime_stopp = 2019-12-13T00:00:00-00:00
 location_start = ""
 location_stopp = ""
+#track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_1_mastertrack.txt"
+track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_1_link-to-mastertrack_V2.tab"
 instruments = ["tsi", "hatpro"]
 
 
@@ -18,11 +20,53 @@ name = "PS122_2"
 description = ""
 platform = "Polarstern"
 project = "Transsect"
-project_desciption = "Transsect"
-datetime_start = 1980-05-27T00:32:00-07:00
-datetime_stopp = 1980-06-27T00:32:00-07:00
+project_description = "Transsect"
+datetime_start = 2019-12-13T09:24:00-00:00
+datetime_stopp = 2020-02-24T08:59:00-00:00
 location_start = ""
 location_stopp = ""
-instruments = ["hatpro"]
+track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_2_link-to-mastertrack_V2.tab"
+instruments = ["tsi"]
 
 
+[PS122_3]
+name = "PS122_3"
+description = ""
+platform = "Polarstern"
+project = "Transsect"
+project_description = "Transsect"
+datetime_start = 2020-02-24T09:20:00-00:00
+datetime_stopp = 2020-06-04T06:29:00-00:00
+location_start = ""
+location_stopp = ""
+track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_3_link-to-mastertrack_V2.tab"
+instruments = ["tsi"]
+
+
+[PS122_4]
+name = "PS122_4"
+description = ""
+platform = "Polarstern"
+project = "Transsect"
+project_description = "Transsect"
+datetime_start = 2020-06-04T06:50:00-00:00
+datetime_stopp = 2020-08-12T09:59:00-00:00
+location_start = ""
+location_stopp = ""
+track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_4_link-to-mastertrack.tab"
+instruments = ["tsi"]
+
+
+[PS122_5]
+name = "PS122_5"
+description = ""
+platform = "Polarstern"
+project = "Transsect"
+project_description = "Transsect"
+datetime_start = 2020-08-12T10:20:00-00:00
+datetime_stopp = 2020-10-12T05:59:00-00:00
+#datetime_stopp = 2020-08-12T05:59:00-00:00
+location_start = ""
+location_stopp = ""
+track = "/vols/rsd2/level1a/aux_data/polarstern/tracks/PS122_5_link-to-mastertrack.tab"
+instruments = ["tsi"]
