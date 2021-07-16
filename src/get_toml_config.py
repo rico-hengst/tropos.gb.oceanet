@@ -10,7 +10,8 @@ Name (key) of instrument/misson :str
 
 Processing
 ----------
-
+* select missions and instruments
+* create a logger object
 
 Returns
 -------

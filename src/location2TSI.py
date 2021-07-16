@@ -148,12 +148,14 @@ def get_exposure_datetime(pathfile):
     
     exposure_datetime = None
 
-    # time from imagename :  002136_0001.JPG
+
+    # time 00:21:36 from imagename :  002136_0001.JPG
     # date from directoryname
-    if re.match("^\d{6}_\d{4}$", basename):
-        m = re.search('^(\d{6})_\d{4}$', basename)
-        time_from_filename = m.group(0)
-        exposure_datetime = datetime.strptime(date_from_dir + ' ' + time_from_filename, '%Y-%m-%d %H%M%S')
+    if re.match("^\d{6}_\d{4}", basename): #hhmmss_0001
+        m = re.search('^(\d{6})_\d{4}', basename)
+        time_from_filename = m.group(1) # cause 0 = whole string
+        
+        exposure_datetime = datetime.strptime(date_from_dir.strftime("%Y-%m-%d") + ' ' + time_from_filename, '%Y-%m-%d %H%M%S')
         
         # set timezone to UTC
         exposure_datetime = timezoneUTC.localize(exposure_datetime)
@@ -186,9 +188,6 @@ def get_exposure_datetime(pathfile):
 # files = glob.glob('/home/hengst/scripte/python' + '/**/*.py', recursive=True)
 # files = sorted( glob.glob('/home/hengst/scripte/python' + '/**/*.py', recursive=True), key=os.path.getsize)
 def find_files_to_dfpics(df, args, config):
-    module_logger.info('Find files in directory tree: ' + abs_cruise_path)
-    
-    
     
     # get metadata of instrument
     for x in config["instruments"]:
@@ -200,9 +199,10 @@ def find_files_to_dfpics(df, args, config):
     
     # check if dir exists
     if not (os.path.isdir(instrument["path_level0_fix"])):
-        module_logger.warn('Data directory not exists: ' + instrument["path_level0_fix"])
+        module_logger.warning('Data directory not exists: ' + instrument["path_level0_fix"])
         quit()
-        
+    else:
+        module_logger.info('Find files in directory: ' + instrument["path_level0_fix"])
         
         
      # add dataframe
@@ -219,7 +219,7 @@ def find_files_to_dfpics(df, args, config):
         
         # check if directory exists
         if not (os.path.isdir( dirname )):
-            module_logger.warn('Data sub-directory not exists: ' + dirname)
+            module_logger.warning('Data sub-directory not exists: ' + dirname)
             continue
         
         # check is direcoty is readable       
@@ -246,7 +246,8 @@ def find_files_to_dfpics(df, args, config):
             
             if exposure_datetime:
                 dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename}, ignore_index=True)
-    
+            else:
+                 module_logger.warning('No exposure datetime traceable: ' + pathfile )
     
     # check if images are in the dataframe
     nn = dfpics['DateTime [UTC]'].count()
@@ -254,7 +255,7 @@ def find_files_to_dfpics(df, args, config):
         module_logger.warning('In total no images were found!')
         quit()
     else:
-        module_logger.info('In total ' + str(nn) + ' were found.')
+        module_logger.info('In total ' + str(nn) + ' images were found.')
     
     # set dfpics timezone to UTC)
     
@@ -285,15 +286,18 @@ def find_files_to_dfpics(df, args, config):
 # remove records in dfpics dataframe if records not fite in interval of df
 def remove_dfpics_outside(df, dfpics):
     module_logger.info('Remove dfpics records outside df period')
+    
+    #print(df)
+    #print(dfpics)
 
     ## remove row in dataframe pics, if pics.DT out of df.DT
     l_old1 = len(dfpics)
-    dfpics = dfpics[ dfpics['DateTime [UTC]'] > df['DateTime [UTC]'].min()  ]
-    module_logger.info(str(l_old1 - len(dfpics)) + ' records removed')
+    dfpics = dfpics[ dfpics['DateTime [UTC]'] >= df['DateTime [UTC]'].min()  ]
+    module_logger.info(str(l_old1 - len(dfpics)) + ' records removed (next min(datetime) of track)')
     
     l_old2 = len(dfpics)
-    dfpics = dfpics[ dfpics['DateTime [UTC]'] < df['DateTime [UTC]'].max() ]
-    module_logger.info(str(l_old2 - len(dfpics)) + ' records removed')
+    dfpics = dfpics[ dfpics['DateTime [UTC]'] <= df['DateTime [UTC]'].max() ]
+    module_logger.info(str(l_old2 - len(dfpics)) + ' records removed (previous max(datetime) of track)')
     
     module_logger.info('Number of originally collected dfpics records: ' + str(l_old1) )
     module_logger.info('Number of remained dfpics records: ' + str(len(dfpics)))
@@ -319,7 +323,7 @@ def interpolation_dfpics(dfpics, f2_lat, f2_lon):
 
 
 # plot track
-def plot_me(df, dfpics):
+def plot_me(df, dfpics, config):
     output_file = args.cruise + "_track.png"
     module_logger.info('Plot track to file: ' + output_file)
     
@@ -329,10 +333,10 @@ def plot_me(df, dfpics):
     lon_max = dfpics['Longitude'].max()
     lon_min = dfpics['Longitude'].min()
     
-    lat_1 = lat_min - 5 - 0.5 * abs(lat_max - lat_min) 
-    lat_2 = lat_max + 5 + 0.5 * abs(lat_max - lat_min) 
-    lon_1 = lon_min - 8 - 0.5 * abs(lon_max - lon_min) 
-    lon_2 = lon_max + 8 + 0.5 * abs(lon_max - lon_min) 
+    lat_1 = lat_min -15 - 2 * abs(lat_max - lat_min) 
+    lat_2 = lat_max + 15 + 2 * abs(lat_max - lat_min) 
+    lon_1 = lon_min - 20 - 2 * abs(lon_max - lon_min) 
+    lon_2 = lon_max + 20 + 2 * abs(lon_max - lon_min) 
     
     # compute new map bounding box
     if lat_1 < -90:
@@ -383,7 +387,7 @@ def plot_me(df, dfpics):
 
 
 # write dfpics to output
-def write_file(dfpics):
+def write_file(dfpics, config):
     output_file =  args.cruise + '_tsi.txt'
     module_logger.info('Write dfpics to file: ' + output_file)
     dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
@@ -431,8 +435,17 @@ def adjust(argv):
       "name": args.cruise,
       "loglevel": "INFO"
     }
-    print(l)
     
+    
+    """Check python version"""
+    python_version = platform.python_version().split(".")
+    if int(python_version[0]) < 3:
+        module_logger.error( "Your python version is: " + platform.python_version() )
+        module_logger.error( "Script will be terminated cause python version < 3 is required !" )
+        exit()
+    
+    
+    # get config
     config = get_toml_config.adjust( thisdict )
     
     
@@ -446,29 +459,18 @@ def adjust(argv):
         module_logger.error('Cruise name is not provided!')
         exit()
     
-    if args.root_path is None:
-        module_logger.error('Root path is not provided!')
+    if args.instrument is None:
+        module_logger.error('Instrument is not provided!')
         exit()
         
     
-    abs_cruise_path = args.root_path + args.cruise + '/DATA/'
-    
-    if not os.path.isdir(  abs_cruise_path ):
-        module_logger.error('Cruise directory not exists: ' + abs_cruise_path)
+    if not os.path.isfile(  config["mission"][args.cruise]["track"] ):
+        module_logger.error('Cruise track file not exists: ' + config["mission"][args.cruise]["track"] )
         exit()
-    
-    
-    """Check python version"""
-    python_version = platform.python_version().split(".")
-    if int(python_version[0]) < 3:
-        module_logger.error( "Your python version is: " + platform.python_version() )
-        module_logger.error( "Script will be terminated cause python version < 3 is required !" )
-        exit()
-    
     
     
     # return
-    return args, abs_cruise_path, config
+    return args, config
 
 
 
@@ -478,7 +480,7 @@ if __name__ == "__main__":
     # execute only if run as a script
     print(__file__)
     
-    args, abs_cruise_path, config = adjust(sys.argv[1:])
+    args, config = adjust(sys.argv[1:])
     
     # set mastertrack_pathfile
     track_pathfile = 'PS95.2_link-to-mastertrack.tab'
@@ -487,18 +489,18 @@ if __name__ == "__main__":
     track_pathfile = 'mastertrack.txt'
     #track_pathfile = 'PS95.2_mastertrack.txt'
     #track_pathfile = 'PS95.1+2_mastertrack.txt'
-    track_pathfile = abs_cruise_path + "POLARSTERN_LOCATION/" + args.cruise + '_link-to-mastertrack.tab'
+    #track_pathfile = abs_cruise_path + "POLARSTERN_LOCATION/" + args.cruise + '_link-to-mastertrack.tab'
+    
+    
     #track_pathfile = abs_cruise_path + "POLARSTERN_LOCATION/" + args.cruise + '_mastertrack.txt'
     #track_pathfile = args.cruise + '_mastertrack.txt'
     
-    if not os.path.isfile(track_pathfile):
-        logger.error('Mastertrack file not exists: ' + track_pathfile)
-        exit()
+
     # set timezones
     timezoneCET = pytz.timezone("CET")
     timezoneUTC = pytz.timezone("UTC")
 
-    df, df_firstdate = read_my_file(track_pathfile)
+    df, df_firstdate = read_my_file( config["mission"][args.cruise]["track"] )
     f2_lat, f2_lon = get_interpol_parameters(df)
     dfpics = find_files_to_dfpics(df, args, config)
 
@@ -509,8 +511,8 @@ if __name__ == "__main__":
 
 
     if len(dfpics)>100:
-        plot_me(df, dfpics)
-        write_file(dfpics)
+        plot_me(df, dfpics, config)
+        write_file(dfpics, config)
     else:
-        logger.error('Impossible to show track, to less records')
+        module_logger.error('Impossible to show track, to less records')
     
