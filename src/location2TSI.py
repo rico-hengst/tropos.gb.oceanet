@@ -193,6 +193,11 @@ def find_files_to_dfpics(df, args, config):
     for x in config["instruments"]:
         if args.instrument in x:
             instrument = x[args.instrument]
+            
+    instrument = None        
+    if not (instrument):
+        module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
+        quit()
     
     # get metadata of mission
     mission = config["mission"][args.cruise]
@@ -364,6 +369,12 @@ def plot_me(df, dfpics, config):
     ax.coastlines(resolution='50m', color='grey', linewidth=1)
     ax.add_feature(cfeature.LAND, facecolor=("lightgray"), alpha=0.5 )
     ax.add_feature(cfeature.BORDERS, linestyle=':', alpha=0.2, linewidth=0.5)
+    
+    # grid
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    gl.xlabels_top = False
+    gl.ylabels_left = False
     
 
     x, y = (df['Longitude'].tolist(), df['Latitude'].tolist() )
