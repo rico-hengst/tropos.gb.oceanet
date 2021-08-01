@@ -194,7 +194,7 @@ def find_files_to_dfpics(df, args, config):
         if args.instrument in x:
             instrument = x[args.instrument]
             
-    instrument = None        
+    #instrument = None        
     if not (instrument):
         module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
         quit()
@@ -333,10 +333,10 @@ def plot_me(df, dfpics, config):
     module_logger.info('Plot track to file: ' + output_file)
     
     # get max min lat lon
-    lat_max = dfpics['Latitude'].max()
-    lat_min = dfpics['Latitude'].min()
-    lon_max = dfpics['Longitude'].max()
-    lon_min = dfpics['Longitude'].min()
+    lat_max = df['Latitude'].max()
+    lat_min = df['Latitude'].min()
+    lon_max = df['Longitude'].max()
+    lon_min = df['Longitude'].min()
     
     lat_1 = lat_min -15 - 2 * abs(lat_max - lat_min) 
     lat_2 = lat_max + 15 + 2 * abs(lat_max - lat_min) 
@@ -357,24 +357,32 @@ def plot_me(df, dfpics, config):
     #print('1 2 Lat Lon: ', str(lat_1), ' ', str(lat_2), ' ', str(lon_1), ' ', str(lon_2))
 
     # https://scitools.org.uk/cartopy/docs/v0.5/matplotlib/advanced_plotting.html
-    fig = plt.figure(figsize=(10, 8))
+    fig = plt.figure(figsize=(10, 10))
     
     #ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    ax = plt.axes(projection=ccrs.PlateCarree())
+    #ax = plt.axes(projection=ccrs.PlateCarree())
+    
+    ax = plt.axes(projection=ccrs.Orthographic(central_longitude=0.0, central_latitude=lat_min + (lat_max - lat_min)*0.5))
+    
+    
     
     #ax.set_extent([-160, 160, -90, 90], crs=ccrs.PlateCarree())
-    ax.set_extent([lon_1, lon_2, lat_1, lat_2], crs=ccrs.PlateCarree())
+    #ax.set_extent([lon_1, lon_2, lat_1, lat_2], crs=ccrs.PlateCarree())
     
     # ad coast country
     ax.coastlines(resolution='50m', color='grey', linewidth=1)
     ax.add_feature(cfeature.LAND, facecolor=("lightgray"), alpha=0.5 )
     ax.add_feature(cfeature.BORDERS, linestyle=':', alpha=0.2, linewidth=0.5)
     
+    geo = ccrs.Geodetic()
+    
+
+    
     # grid
-    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                  linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-    gl.xlabels_top = False
-    gl.ylabels_left = False
+    #gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  #linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    #gl.xlabels_top = False
+    #gl.ylabels_left = False
     
 
     x, y = (df['Longitude'].tolist(), df['Latitude'].tolist() )
@@ -383,13 +391,15 @@ def plot_me(df, dfpics, config):
     x2, y2 = (dfpics['Longitude'].tolist(), dfpics['Latitude'].tolist() )
     #m.plot(x, y, 'g|', ms = 3)
     
-    ax.plot(x, y, 'm+', ms = 1, label='Mastertrack ' + args.cruise)
-    ax.plot(x2, y2, 'g|', ms = 3, label='TSI shots')
+    ax.plot(x, y, 'm+', ms = 1, label='Cruise mastertrack ', transform=geo)
+    ax.plot(x2, y2, 'g|', ms = 3, label='TSI shots', transform=geo)
     legend = ax.legend(shadow=True)
+    ax.set_global()
+
    
     #plt.xlabel('Longitude', labelpad=40)
     
-    plt.title('Track of ' + args.cruise)
+    plt.title(args.cruise)
     plt.suptitle(str( dfpics['DateTime [UTC]'].iloc[0] )  + ' - ' + str( dfpics['DateTime [UTC]'].iloc[-1] ) + ' UTC', fontsize=10)
 
     #plt.show()
