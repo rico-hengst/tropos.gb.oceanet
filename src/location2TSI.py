@@ -503,18 +503,7 @@ if __name__ == "__main__":
     
     args, config = adjust(sys.argv[1:])
     
-    # set mastertrack_pathfile
-    track_pathfile = 'PS95.2_link-to-mastertrack.tab'
-    track_pathfile = 'PS95.1+2_link-to-mastertrack.tab'
-    track_pathfile = 'link-to-mastertrack.tab'
-    track_pathfile = 'mastertrack.txt'
-    #track_pathfile = 'PS95.2_mastertrack.txt'
-    #track_pathfile = 'PS95.1+2_mastertrack.txt'
-    #track_pathfile = abs_cruise_path + "POLARSTERN_LOCATION/" + args.cruise + '_link-to-mastertrack.tab'
-    
-    
-    #track_pathfile = abs_cruise_path + "POLARSTERN_LOCATION/" + args.cruise + '_mastertrack.txt'
-    #track_pathfile = args.cruise + '_mastertrack.txt'
+
     
 
     # set timezones
