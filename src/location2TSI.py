@@ -544,7 +544,7 @@ if __name__ == "__main__":
 
 
     if len(dfpics)>100:
-        plot_me(df, dfpics, config_sigular)
+        plot_me(df, dfpics, config_singular)
         write_file(dfpics, config_singular)
     else:
         module_logger.error('Impossible to show track, to less records')
