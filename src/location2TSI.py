@@ -202,6 +202,7 @@ def find_files_to_dfpics(df, args, config):
         module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
         quit()
     
+    # create new config dict with two main keys: instrument & mission
     config_singular = {}
     config_singular["instrument"] = instrument 
     config_singular["mission"] = config["mission"][args.cruise]
@@ -337,8 +338,13 @@ def interpolation_dfpics(dfpics, f2_lat, f2_lon):
 
 
 # plot track
-def plot_me(df, dfpics, config):
-    output_file = args.cruise + "_track.png"
+def plot_me(df, dfpics, config_singular):
+    
+    if not os.path.isdir(config_singular["instrument"]["path_level1a_image "])
+        module_logger.error('Directory to write image not exists: ' + config_singular["instrument"]["path_level1a_image"]  )
+        exit()
+        
+    output_file = config_singular["instrument"]["path_level1a_image "] + "_" + args.cruise + "_track.png"
     module_logger.info('Plot track to file: ' + output_file)
     
     # get max min lat lon
@@ -420,10 +426,8 @@ def plot_me(df, dfpics, config):
 def write_file(dfpics, config_singular):
     
     
-    print( config_singular["instrument"])
-    
     output_file =  args.cruise + '_' + args.instrument + '.txt'
-    output_file =  config_singular["instrument"]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
+    output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.txt'
     
     if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
@@ -540,7 +544,7 @@ if __name__ == "__main__":
 
 
     if len(dfpics)>100:
-        plot_me(df, dfpics, config)
+        plot_me(df, dfpics, config_sigular)
         write_file(dfpics, config_singular)
     else:
         module_logger.error('Impossible to show track, to less records')
