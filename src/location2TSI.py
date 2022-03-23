@@ -201,7 +201,8 @@ def find_files_to_dfpics(df, args, config):
     if not (instrument):
         module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
         quit()
-        
+    
+    config_singular = {}
     config_singular["instrument"] = instrument 
     config_singular["mission"] = config["mission"][args.cruise]
 
