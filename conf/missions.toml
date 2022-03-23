@@ -65,8 +65,9 @@ project = "Transsect"
 project_description = "Transsect"
 datetime_start = 2020-08-12T10:20:00-00:00
 #datetime_stopp = 2020-10-12T05:59:00-00:00
-datetime_stopp = 2020-08-23T05:59:00-00:00
+datetime_stopp = 2020-08-15T05:59:00-00:00
 location_start = ""
 location_stopp = ""
 track = "/data/level1a/aux_data/polarstern/tracks/PS122_5_link-to-mastertrack.tab"
 instruments = ["tsi_powershot_oceanet"]
+src/location2TSI.py
