@@ -425,7 +425,7 @@ def write_file(dfpics, config_singular):
     output_file =  args.cruise + '_' + args.instrument + '.txt'
     output_file =  config_singular["instrument"]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
     
-    if not os.path.isdir(["instrument"]["path_level1a_csv"]  ):
+    if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
         exit()
     
