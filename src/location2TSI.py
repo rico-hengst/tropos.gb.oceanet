@@ -201,6 +201,9 @@ def find_files_to_dfpics(df, args, config):
     if not (instrument):
         module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
         quit()
+        
+    config_singular[instrument] = instrument 
+    config_singular[mission] = config["mission"][args.cruise]
     
     # get metadata of mission
     mission = config["mission"][args.cruise]
@@ -288,8 +291,9 @@ def find_files_to_dfpics(df, args, config):
     if number_nan_values > 0:
         module_logger.error('Warning, {0} NaN values exists in Dataframe'.format(number_nan_values))
         quit()
-        
-    return dfpics
+    
+
+    return dfpics, config_singular
     
 # remove records in dfpics dataframe if records not fite in interval of df
 def remove_dfpics_outside(df, dfpics):
@@ -411,16 +415,16 @@ def plot_me(df, dfpics, config):
 
 
 # write dfpics to output
-def write_file(dfpics, config):
+def write_file(dfpics, config_singular):
     
     
-    print( config["instrument"][args.instrument]["path_level1a_csv"] )
+    print( config_singular["instrument"][args.instrument]["path_level1a_csv"] )
     
     output_file =  args.cruise + '_' + args.instrument + '.txt'
-    output_file =  config["instrument"][args.instrument]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
+    output_file =  config_singular["instrument"][args.instrument]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
     
-    if not os.path.isdirectory( config["instrument"][args.instrument]["path_level1a_csv"]  ):
-        module_logger.error('Directory to write data not exists: ' + config["instrument"][args.instrument]["path_level1a_csv"]  )
+    if not os.path.isdirectory( config_singular["instrument"][args.instrument]["path_level1a_csv"]  ):
+        module_logger.error('Directory to write data not exists: ' + config_singular["instrument"][args.instrument]["path_level1a_csv"]  )
         exit()
     
     module_logger.info('Write dfpics to file: ' + output_file)
@@ -484,6 +488,7 @@ def adjust(argv):
     
     
     
+    
         
     
     # add first log mesage
@@ -497,7 +502,6 @@ def adjust(argv):
         module_logger.error('Instrument is not provided!')
         exit()
         
-    
     if not os.path.isfile(  config["mission"][args.cruise]["track"] ):
         module_logger.error('Cruise track file not exists: ' + config["mission"][args.cruise]["track"] )
         exit()
@@ -525,7 +529,7 @@ if __name__ == "__main__":
 
     df, df_firstdate = read_my_file( config["mission"][args.cruise]["track"] )
     f2_lat, f2_lon = get_interpol_parameters(df)
-    dfpics = find_files_to_dfpics(df, args, config)
+    dfpics, config_singular = find_files_to_dfpics(df, args, config)
 
     dfpics = remove_dfpics_outside(df, dfpics)
     dfpics = interpolation_dfpics(dfpics, f2_lat, f2_lon)
@@ -535,7 +539,7 @@ if __name__ == "__main__":
 
     if len(dfpics)>100:
         plot_me(df, dfpics, config)
-        write_file(dfpics, config)
+        write_file(dfpics, config_singular)
     else:
         module_logger.error('Impossible to show track, to less records')
     
