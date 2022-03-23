@@ -204,6 +204,7 @@ def find_files_to_dfpics(df, args, config):
         
     config_singular["instrument"] = instrument 
     config_singular["mission"] = config["mission"][args.cruise]
+
     
     # get metadata of mission
     mission = config["mission"][args.cruise]
