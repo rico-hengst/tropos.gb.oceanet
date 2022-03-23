@@ -420,7 +420,7 @@ def plot_me(df, dfpics, config):
 def write_file(dfpics, config_singular):
     
     
-    print( config_singular["instrument"][args.instrument]["path_level1a_csv"] )
+    print( config_singular["instrument"])
     
     output_file =  args.cruise + '_' + args.instrument + '.txt'
     output_file =  config_singular["instrument"][args.instrument]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
