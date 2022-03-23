@@ -419,6 +419,9 @@ def write_file(dfpics, config):
     output_file =  args.cruise + '_' + args.instrument + '.txt'
     output_file =  config["instrument"][args.instrument]["path_level1a_csv"] + "/" + args.cruise + '_' + args.instrument + '.txt'
     
+    if not os.path.isdirectory( config["instrument"][args.instrument]["path_level1a_csv"]  ):
+        module_logger.error('Directory to write data not exists: ' + config["instrument"][args.instrument]["path_level1a_csv"]  )
+        exit()
     
     module_logger.info('Write dfpics to file: ' + output_file)
     dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude [°]', 'Longitude [°]', 'Filename'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
