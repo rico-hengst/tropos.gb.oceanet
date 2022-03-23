@@ -340,11 +340,11 @@ def interpolation_dfpics(dfpics, f2_lat, f2_lon):
 # plot track
 def plot_me(df, dfpics, config_singular):
     
-    if not os.path.isdir(config_singular["instrument"]["path_level1a_image "]):
+    if not os.path.isdir(config_singular["instrument"]["path_level1a_image"]):
         module_logger.error('Directory to write image not exists: ' + config_singular["instrument"]["path_level1a_image"]  )
         exit()
         
-    output_file = config_singular["instrument"]["path_level1a_image "] + "_" + args.cruise + "_track.png"
+    output_file = config_singular["instrument"]["path_level1a_image"] + "_" + args.cruise + "_track.png"
     module_logger.info('Plot track to file: ' + output_file)
     
     # get max min lat lon
