@@ -70,4 +70,4 @@ location_start = ""
 location_stopp = ""
 track = "/data/level1a/aux_data/polarstern/tracks/PS122_5_link-to-mastertrack.tab"
 instruments = ["tsi_powershot_oceanet"]
-src/location2TSI.py
+
