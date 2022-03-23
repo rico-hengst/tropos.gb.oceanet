@@ -48,6 +48,8 @@ import pytz
 import get_toml_config
 
 
+
+
 """ Create logger, name important """
 module_logger = logging.getLogger('oceanet.tsi')
 
@@ -190,11 +192,12 @@ def get_exposure_datetime(pathfile):
 def find_files_to_dfpics(df, args, config):
     
     # get metadata of instrument
+    instrument = None  
     for x in config["instruments"]:
         if args.instrument in x:
             instrument = x[args.instrument]
             
-    #instrument = None        
+          
     if not (instrument):
         module_logger.warning('Instrument "' + args.instrument +  '" not exists in misson "' + args.cruise + '".')
         quit()

@@ -182,6 +182,9 @@ def loop(args, logger):
     cfg = toml.loads( toml.dumps(nested_dict)  )
     
     cfg = add_instrument_pathfilenames(args, cfg)
+    
+    
+  
 
 
     #print (cfg)
@@ -192,7 +195,8 @@ def loop(args, logger):
         
         
         pp = pprint.PrettyPrinter(width=71, compact=True, depth=3,  indent=3)
-
+        
+            
         pp.pprint(cfg.get(key,[]) )
         
     return cfg
