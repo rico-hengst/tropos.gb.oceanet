@@ -46,6 +46,7 @@ import cartopy.feature as cfeature
 import pytz
 
 import get_toml_config
+import zipfile
 
 
 
@@ -259,7 +260,7 @@ def find_files_to_dfpics(df, args, config):
             dir_last, basename, exposure_datetime = get_exposure_datetime(pathfile)
             
             if exposure_datetime:
-                dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename}, ignore_index=True)
+                dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename, 'FileFullPath' : pathfile}, ignore_index=True)
             else:
                  module_logger.warning('No exposure datetime traceable: ' + pathfile )
     
@@ -434,10 +435,25 @@ def write_file(dfpics, config_singular):
         exit()
     
     module_logger.info('Write dfpics to file: ' + output_file)
-    dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
+    dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File', 'FileFullPath'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
     #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f')
 
 
+
+# write all related pics to zip
+def write_piczipfile(dfpics, config_singular):
+    output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.zip'
+    if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
+        module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
+        exit()
+    
+    module_logger.info('Write pics to zip archive: ' + output_file)
+    
+    zf = zipfile.ZipFile(output_file, "w")
+    
+    
+    for index, row in dfpics.iterrows():
+        zf.write(row['FileFullPath'], row["File"])
 
 
 #####################################################################################                                                    
@@ -546,6 +562,7 @@ if __name__ == "__main__":
     if len(dfpics)>100:
         plot_me(df, dfpics, config_singular)
         write_file(dfpics, config_singular)
+        write_piczipfile(dfpics, config_singular)
     else:
         module_logger.error('Impossible to show track, to less records')
     
