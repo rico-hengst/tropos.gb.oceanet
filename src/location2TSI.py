@@ -30,7 +30,7 @@ a csv file to publishing via pangaea.de
 
 
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import glob
@@ -174,7 +174,9 @@ def get_exposure_datetime(pathfile):
         exposure_datetime = datetime.fromtimestamp( exposure_datetime )#, tz=timezone.utc)
         
         # set timezone to CET
-        exposure_datetime = timezoneCET.localize(exposure_datetime)
+        #exposure_datetime = timezoneCET.localize(exposure_datetime)
+        # set timezone to UTC = rsd2
+        exposure_datetime = timezoneUTC.localize(exposure_datetime)
         
         # check if directory date if less equal than 24h than stst mtime
         d =  exposure_datetime - date_from_dir
@@ -424,36 +426,97 @@ def plot_me(df, dfpics, config_singular):
 
 
 # write dfpics to output
-def write_file(dfpics, config_singular):
+def write_file(args, dfpics, config_singular):
     
     
-    output_file =  args.cruise + '_' + args.instrument + '.txt'
-    output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.txt'
-    
+    # Test if dir exists
     if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
         exit()
     
-    module_logger.info('Write dfpics to file: ' + output_file)
-    dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File', 'FileFullPath'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
-    #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f')
+    # Start write FULL txt
+    if(args.splitted_output == 'FULL'):
+        output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.txt'
+        
+        module_logger.info('Write dfpics to file: ' + output_file)
+        dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
+        #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File', 'FileFullPath'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
+        #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f')
+    # Start write splitted txt
+    elif(args.splitted_output == 'DAILY'):
+        # get DATES without TIMES
+        start_date  = config_singular["mission"]["datetime_start"].replace(hour=0, minute=0, second=0)
+        end_date    = config_singular["mission"]["datetime_stopp"].replace(hour=0, minute=0, second=0)
+        i_date      = start_date.replace(hour=0, minute=0, second=0)
+        
+        delta       = timedelta(days=1)
+        
+        # iteration daily
+        while i_date <= end_date:
+            
+            # mask data
+            mask = (dfpics['DateTime [UTC]'] >= i_date) & (dfpics['DateTime [UTC]'] < (i_date + delta) )
+            dfpics_i_date = dfpics.loc[mask]
+            
+            # create txt file
+            output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.txt'
+            module_logger.info('Write dpics to file: ' + output_file)
+            dfpics_i_date.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
 
-
+            # next loop iteration
+            i_date += delta
 
 # write all related pics to zip
-def write_piczipfile(dfpics, config_singular):
-    output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.zip'
+def write_piczipfile(args, dfpics, config_singular):
+    
+    # Test if dir exists
     if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
         exit()
     
-    module_logger.info('Write pics to zip archive: ' + output_file)
+    # Start write FULL Zip
+    if(args.splitted_output == 'FULL'):
+        output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.zip'
+        
+        module_logger.info('Write pics to zip archive: ' + output_file)
+        zf = zipfile.ZipFile(output_file, "w")
+        
+        for index, row in dfpics.iterrows():
+            zf.write(row['FileFullPath'], row["File"])
+            
+    # Start write splitted zip
+    elif(args.splitted_output == 'DAILY'):
+        # get DATES without TIMES
+        start_date  = config_singular["mission"]["datetime_start"].replace(hour=0, minute=0, second=0)
+        end_date    = config_singular["mission"]["datetime_stopp"].replace(hour=0, minute=0, second=0)
+        i_date      = start_date.replace(hour=0, minute=0, second=0)
+        
+        delta       = timedelta(days=1)
+        
+        # iteration daily
+        while i_date <= end_date:
+            
+            # mask data
+            mask = (dfpics['DateTime [UTC]'] >= i_date) & (dfpics['DateTime [UTC]'] < (i_date + delta) )
+            dfpics_i_date = dfpics.loc[mask]
+
+            # create zip file
+            output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.zip'
+            module_logger.info('Write pics to zip archive: ' + output_file)
+            zf = zipfile.ZipFile(output_file, "w")
+            
+            # fill zip file
+            for index, row in dfpics_i_date.iterrows():
+                zf.write(row['FileFullPath'], row["File"])
+            
+            # next loop iteration
+            i_date += delta
+            
     
-    zf = zipfile.ZipFile(output_file, "w")
+    return
     
     
-    for index, row in dfpics.iterrows():
-        zf.write(row['FileFullPath'], row["File"])
+    
 
 
 #####################################################################################                                                    
@@ -480,10 +543,12 @@ def adjust(argv):
                     help='Insert the name of the cruise (e.g: PS95 or PS122_1)')
     parser.add_argument('-i', required=True, type=str, dest='instrument',
                     help='Name of the instrument')
-    parser.add_argument('-p', type=str, dest='root_path', default='/vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/',
-                    help='Insert the froot path of the oceanet data (e.g: /vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/')
+    # parser.add_argument('-p', type=str, dest='root_path', default='/vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/',
+                    # help='Insert the froot path of the oceanet data (e.g: /vols/oceanet-archive_chief/OCEANET_DATEN_BACKUP/')
     parser.add_argument('--loglevel', default='INFO', dest='loglevel',
                     help="define loglevel of screen INFO (default) | WARNING | ERROR ")
+    parser.add_argument('--splitted_output', choices=['DAILY', 'FULL'], default='DAILY', dest='splitted_output',
+                    help="define dplitted output FULL | DAILY (default)")
     args = parser.parse_args()
     
     
@@ -561,8 +626,8 @@ if __name__ == "__main__":
 
     if len(dfpics)>100:
         plot_me(df, dfpics, config_singular)
-        write_file(dfpics, config_singular)
-        write_piczipfile(dfpics, config_singular)
+        write_file(args, dfpics, config_singular)
+        write_piczipfile(args, dfpics, config_singular)
     else:
         module_logger.error('Impossible to show track, to less records')
     
