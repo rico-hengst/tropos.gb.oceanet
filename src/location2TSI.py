@@ -262,7 +262,7 @@ def find_files_to_dfpics(df, args, config):
             dir_last, basename, exposure_datetime = get_exposure_datetime(pathfile)
             
             if exposure_datetime:
-                dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename, 'FileFullPath' : pathfile}, ignore_index=True)
+                dfpics = dfpics.append({'DateTime [UTC]': exposure_datetime, 'File' : dir_last + "/" + basename, 'FileFullPath' : pathfile, 'VirtualFile' : exposure_datetime.strftime("%Y%m%d_%H%M%S_") + basename}, ignore_index=True)
             else:
                  module_logger.warning('No exposure datetime traceable: ' + pathfile )
     
@@ -433,13 +433,18 @@ def write_file(args, dfpics, config_singular):
     if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
         exit()
+        
+    # Test if subdir exists
+    suboutdir = config_singular["instrument"]["path_level1a_csv"] + args.cruise.lower() + "/"
+    if not os.path.isdir( suboutdir ):
+        os.mkdir( suboutdir )
     
     # Start write FULL txt
     if(args.splitted_output == 'FULL'):
-        output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.txt'
+        output_file =  suboutdir + args.cruise.lower() + '_' + args.instrument + '.txt'
         
         module_logger.info('Write dfpics to file: ' + output_file)
-        dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
+        dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'VirtualFile'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
         #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File', 'FileFullPath'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
         #dfpics.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f')
     # Start write splitted txt
@@ -458,10 +463,15 @@ def write_file(args, dfpics, config_singular):
             mask = (dfpics['DateTime [UTC]'] >= i_date) & (dfpics['DateTime [UTC]'] < (i_date + delta) )
             dfpics_i_date = dfpics.loc[mask]
             
-            # create txt file
-            output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.txt'
-            module_logger.info('Write dpics to file: ' + output_file)
-            dfpics_i_date.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'File'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
+            
+            # check if data exists
+            if len(dfpics_i_date.index) == 0:
+                module_logger.warning('No data from  ' + str(i_date) + ' - ' + str(i_date + delta) )
+            else:
+                # create txt file
+                output_file =  suboutdir + args.cruise.lower() + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.txt'
+                module_logger.info('Write dpics to file: ' + output_file)
+                dfpics_i_date.to_csv(output_file, sep='\t', header=True, index=False, columns=['DateTime [UTC]', 'Latitude', 'Longitude', 'VirtualFile'], float_format='%.5f', date_format='%Y-%m-%dT%H:%M:%S %z')
 
             # next loop iteration
             i_date += delta
@@ -473,16 +483,21 @@ def write_piczipfile(args, dfpics, config_singular):
     if not os.path.isdir(config_singular["instrument"]["path_level1a_csv"]  ):
         module_logger.error('Directory to write data not exists: ' + config_singular["instrument"]["path_level1a_csv"]  )
         exit()
+        
+    # Test if subdir exists
+    suboutdir = config_singular["instrument"]["path_level1a_csv"] + args.cruise.lower() + "/"
+    if not os.path.isdir( suboutdir ):
+        os.mkdir( suboutdir )
     
     # Start write FULL Zip
     if(args.splitted_output == 'FULL'):
-        output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '.zip'
+        output_file =  suboutdir + args.cruise.lower() + '_' + args.instrument + '.zip'
         
         module_logger.info('Write pics to zip archive: ' + output_file)
         zf = zipfile.ZipFile(output_file, "w")
         
         for index, row in dfpics.iterrows():
-            zf.write(row['FileFullPath'], row["File"])
+            zf.write(row['FileFullPath'], arcname = row["VirtualFile"])
             
     # Start write splitted zip
     elif(args.splitted_output == 'DAILY'):
@@ -499,15 +514,20 @@ def write_piczipfile(args, dfpics, config_singular):
             # mask data
             mask = (dfpics['DateTime [UTC]'] >= i_date) & (dfpics['DateTime [UTC]'] < (i_date + delta) )
             dfpics_i_date = dfpics.loc[mask]
-
-            # create zip file
-            output_file =  config_singular["instrument"]["path_level1a_csv"] + args.cruise + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.zip'
-            module_logger.info('Write pics to zip archive: ' + output_file)
-            zf = zipfile.ZipFile(output_file, "w")
             
-            # fill zip file
-            for index, row in dfpics_i_date.iterrows():
-                zf.write(row['FileFullPath'], row["File"])
+            # check if data exists
+            if len(dfpics_i_date.index) == 0:
+                module_logger.warning('No data from  ' + str(i_date) + ' - ' + str(i_date + delta) )
+
+            else:
+                # create zip file
+                output_file =  suboutdir + args.cruise.lower() + '_' + args.instrument + '_' +  i_date.strftime("%Y-%m-%d") + '.zip'
+                module_logger.info('Write pics to zip archive: ' + output_file)
+                zf = zipfile.ZipFile(output_file, "w")
+                
+                # fill zip file
+                for index, row in dfpics_i_date.iterrows():
+                    zf.write(row['FileFullPath'], arcname = row["VirtualFile"])
             
             # next loop iteration
             i_date += delta
