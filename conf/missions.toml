@@ -72,27 +72,43 @@ track = "/data/level1a/aux_data/polarstern/tracks/PS122_5_link-to-mastertrack.ta
 instruments = ["tsi_powershot_oceanet"]
 
 
-[PS127_1]
-name = "PS127_1"
+#[PS127_1]
+#name = "PS127_1"
+#description = ""
+#platform = "Polarstern"
+#project = "Transsect"
+#project_description = "Transsect"
+#datetime_start = 2021-12-05T12:00:00-00:00
+##datetime_stopp = 2021-12-07T06:00:00-00:00
+#datetime_stopp = 2021-12-16T06:00:00-00:00
+#location_start = ""
+#location_stopp = ""
+#track = "/data/level1a/aux_data/polarstern/tracks/PS127_link-to-mastertrack.tab"
+#instruments = ["tsi_vivotek_oceanet"]
+
+
+#[PS127_2]
+#name = "PS127_2"
+#description = ""
+#platform = "Polarstern"
+#project = "Transsect"
+#project_description = "Transsect"
+#datetime_start = 2021-12-16T20:00:00-00:00
+#datetime_stopp = 2022-01-04T03:00:00-00:00
+#location_start = ""
+#location_stopp = ""
+#track = "/data/level1a/aux_data/polarstern/tracks/PS127_link-to-mastertrack.tab"
+#instruments = ["tsi_vivotek_oceanet"]
+
+
+[PS127]
+name = "PS127"
 description = ""
 platform = "Polarstern"
 project = "Transsect"
 project_description = "Transsect"
 datetime_start = 2021-12-05T12:00:00-00:00
-datetime_stopp = 2021-12-16T06:00:00-00:00
-location_start = ""
-location_stopp = ""
-track = "/data/level1a/aux_data/polarstern/tracks/PS127_link-to-mastertrack.tab"
-instruments = ["tsi_vivotek_oceanet"]
-
-
-[PS127_2]
-name = "PS127_2"
-description = ""
-platform = "Polarstern"
-project = "Transsect"
-project_description = "Transsect"
-datetime_start = 2021-12-16T20:00:00-00:00
+#datetime_stopp = 2021-12-06T06:00:00-00:00
 datetime_stopp = 2022-01-04T03:00:00-00:00
 location_start = ""
 location_stopp = ""
