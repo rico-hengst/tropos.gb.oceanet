@@ -211,7 +211,7 @@ def write_data( args, total_df ):
     total_df.sort_values(by='DateTime [UTC]', inplace=True)
 
     if total_df.duplicated(subset=['DateTime [UTC]']).sum() > 0:
-        module_logger.error('{0} / {1} duplicates in rows of DateTime exists!'.format( str( total_df.duplicated(subset=['DateTime [UTC]']).sum()), str(len(total_df))  ) )
+        module_logger.error('{0} / {1} duplicates / total number of records in row DateTime exists!'.format( str( total_df.duplicated(subset=['DateTime [UTC]']).sum()), str(len(total_df))  ) )
         module_logger.error( 'Duplicates are: \n{0}'.format( total_df['DateTime [UTC]'][ total_df['DateTime [UTC]'].duplicated() ] ) )
         
         # excption
@@ -239,7 +239,7 @@ def write_data( args, total_df ):
     second_since = netCDF4.date2num(total_df['DateTime [UTC]'], cfjson['variables']['time']['attributes']['units'])
     
     # add metadata
-    cfjson["attributes"]["file_created"] = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S') + ", UTC"
+    cfjson["attributes"]["file_created"] = datetime.utcnow().strftime('%Y-%m-%d')
     cfjson["attributes"]["project_mission"] = args.cruise
     
     # set Dim
