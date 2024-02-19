@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""The script creates a csv-file and contains data of the SCAW1 measurements
+"""The script 
+* collects and read the text files from a cruise from the SCAW device,
+* extract the focussed variables (radiation currently)
+* and save the data to a netcdf file
+
+Make sure that the toml files mission and instruments hold the most current metadata.
 
 Parameters
 ----------
@@ -17,7 +22,7 @@ Processing
 
 Returns
 -------
-a csv file to publishing via pangaea,de that
+a netcdf file to publishing via pangaea,de that
 """
 
 
@@ -194,11 +199,11 @@ def read_scaw1_file(pathfile, total_df):
     return total_df
     
 
-def write_data(total_df):
+def write_data( args, total_df ):
     
     module_logger.info('Write data to file.')
     
-    nc_file = args.cruise + '_scaw1.nc'
+    nc_file = args.cruise + "_" + args.instrument + '.nc'
 
 
     
@@ -324,7 +329,7 @@ if __name__ == "__main__":
     
     total_df = find_scaw1_files( config )
 
-    write_data(total_df)
+    write_data(args, total_df)
 
 
     #df_multiindex = total_df.set_index(['DT', 'Latitude', 'Longitude'])
