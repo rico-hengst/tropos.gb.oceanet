@@ -217,6 +217,12 @@ def adjust(argv):
     #log_path_file = current_dirname + "/log/uv_processing.log"
     log_path_file = current_dirname + "/../log/oceanet.log"
     
+
+    if not os.path.dirname( log_path_file ):
+        os.makedirs(os.path.dirname( log_path_file ) ) 
+        print(os.path.dirname( log_path_file ) + "create")
+ 
+    
     
     """ Create logger, name important """
  
