@@ -1,4 +1,4 @@
-# oceanet_development
+# oceanet2pangaea
 
 The repo contains scripts to convert measurements (oceanet) to the [pangaea data format](https://wiki.pangaea.de/wiki/Data_submission).
 **This repo is in development** and based on former idl scripts.
