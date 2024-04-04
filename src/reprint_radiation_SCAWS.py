@@ -215,13 +215,24 @@ def write_data( args, total_df ):
         module_logger.error( 'Duplicates are: \n{0}'.format( total_df['DateTime [UTC]'][ total_df['DateTime [UTC]'].duplicated() ] ) )
         
         # excption
-        ans = input("Save data although duplicates exists? [y/n] ")
+        ans = input("Save data although duplicates exists, otherwise duplicated will be dropped? [y/n] ")
         if ans == "y":
             nc_file = nc_file + '_include_duplicates.nc'
             module_logger.info( "Your choise: save data include duplicates!" )
         elif ans == "n":
             module_logger.error( "Your choise: exit the script!" )
-            exit()
+            #exit()
+            
+            total_df.drop_duplicates(subset=['DateTime [UTC]'], keep='first', inplace=True)
+            module_logger.info( "Drop duplicates, kept first occurence!" )
+            
+            if total_df.duplicated(subset=['DateTime [UTC]']).sum() > 0:
+                exit()
+            
+            # check unsorted
+            if not (total_df[DateTime ['UTC]'].is_monotonic_increasing:
+                module_logger.error( "Dataset is not sorted: no monotonic" )
+                exit()
         
     
     
