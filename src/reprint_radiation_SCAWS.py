@@ -238,9 +238,29 @@ def write_data( args, total_df ):
     # compute seconds since
     second_since = netCDF4.date2num(total_df['DateTime [UTC]'], cfjson['variables']['time']['attributes']['units'])
     
+    
     # add metadata
     cfjson["attributes"]["file_created"] = datetime.utcnow().strftime('%Y-%m-%d')
     cfjson["attributes"]["project_mission"] = args.cruise
+    cfjson["attributes"]["time_coverage_start"] = str( total_df['DateTime [UTC]'].min() )
+    cfjson["attributes"]["time_coverage_end"] = str( total_df['DateTime [UTC]'].max() )
+    cfjson["attributes"]["geospatial_lat_min"] = total_df['Latitude'].min()
+    cfjson["attributes"]["geospatial_lat_max"] = total_df['Latitude'].max()
+    cfjson["attributes"]["geospatial_lon_min"] = total_df['Longitude'].min()
+    cfjson["attributes"]["geospatial_lon_max"] = total_df['Longitude'].max()
+    
+    
+    del cfjson["attributes"]['geospatial_lon_max']
+    
+   
+    
+    
+    for mykey in list(cfjson["attributes"].keys()):
+        t = mykey.find("g", 0, 1)
+        if not (t):
+            module_logger.info('Delete global attribute, it seems to be a comment: ' + mykey )
+            del cfjson["attributes"][mykey]
+            
     
     # set Dim
     cfjson.setDim('time', len(second_since))
