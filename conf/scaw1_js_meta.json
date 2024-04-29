@@ -1,88 +1,91 @@
 {
     "attributes": {
-        "conventions"       : "CF-1.8",
-        "title"             : "Surface downwelling flux in air",
-        "institution"       : "TROPOS Leipzig, Germany",
-        "project_mission"   : -1,
-        "platform"          : "Polarstern,Oceanet",
-        "instrument"        : "Scalable weather station",
-        "contact_person" : "???Name of person; mail to:email",
-        "description": "metadata was taken from uv_js_meta.json and data were processed via BTS_main_process.py",
-        "keywords": "MOSAIC, Oceanet, downwelling flux",
-        "serial_number_instrument" : "???",
-        "history"           : "",
-        "source"            : "observation via weather station",
-        "processing_level"  : "0",
-        "comment"           : "",
-        "acknowledgement"   : "",
-        "license"           : "GPL",
-        "publisher_name"    : "",
-        "references"        : "",
-        "time_coverage_start" : -1,
-        "time_coverage_end" : -1,
-        "geospatial_lat_min": -1,
-        "geospatial_lat_max": -1,
-        "geospatial_lon_min": -1,
-        "geospatial_lon_max": -1,
-        "file_created" : -1
+        "conventions"           : "CF-1.8",
+        "title"                 : "Continuous radiation measurements during the POLARSTERN cruise PS122/1-5, 06 October 2019 – 02 October 2020, Arctic Ocean",
+        "do_address"            : "Leibniz Institute for Tropospheric Research, TROPOS, Germany",
+        "do_name"               : "Engelmann, Ronny; Griesche, Hannes; Radenz, Martin; Hofer, Julian; Althausen, Dietrich; Hengst, Rico",
+        "do_email"              : "Engelmann, Ronny <ronny@tropos.de>",
+        "ds_name"               : "Hengst, Rico",
+        "ds_address"            : "Leibniz Institute for Tropospheric Research, TROPOS, Germany",
+        "institution"           : "TROPOS Leipzig, Germany",
+        "project_mission"       : "MOSAIC",
+        "platform"              : "Polarstern,Oceanet",
+        "instrument"            : "Scalable weather station",
+        "description"           : "The bow crane boom was positioned horizontally over the bow of the Research Vessel Polarstern. The radiation measuring devices had been attached to the boom. The radiation data are acquired with a temporal resolution 1 second at the bow crane boom of the ship from 06 October 2019 – 02 October 2020, Arctic Ocean. The measurement had been done for the short-wave downward (GLOBAL) radiation by a pyranometer, Kipp & Zonen, CM21 and for the long-wave downward radiation by a pyrgeometer, Kipp & Zonen, CGR4. The long-wave downward radiation is the same as the downward thermal-infrared radiation (DTIR).",
+        "keywords"              : "MOSAIC, Oceanet, downwelling flux",
+        "serial_number_instrument" : "",
+        "history"               : "processed via oceanet software https://github.com/rico-hengst/tropos.gb.oceanet, metadata were taken from scaw1_js_meta.json",
+        "source"                : "observation via weather station",
+        "processing_level"      : "0",
+        "comment"               : "The temporal resolution of the data is one second.",
+        "acknowledgement"       : "",
+        "license"               : "CC BY-SA 4.0",
+        "references"            : "",
+        "time_coverage_start"   : -1,
+        "time_coverage_end"     : -1,
+        "geospatial_lat_min"    : -1,
+        "geospatial_lat_max"    : -1,
+        "geospatial_lon_min"    : -1,
+        "geospatial_lon_max"    : -1,
+        "file_created"          : -1
     },
         
     "dimensions": {
-        "time": -1
+        "time"                  : -1
     },  
           
     "variables": {
-        "Longitude": {
-            "type": "f4",
-            "shape": ["time"],
-            "data": [],
-            "attributes": {
-                "units": "degrees_east",
-                "long_name" : "Longitude",
-                "standard_name": "Longitude",
-                "valid_range" : [-180.0,180.0]
-            }
-        },
-        "Latitude": {
-            "type": "f4",
-            "shape": ["time"],
-            "data": [],
-            "attributes": {
-                "units": "degrees_north",
-                "long_name" : "Latitude",
-                "standard_name": "Latitude",
-                "valid_range" : [-90.0,90.0]
-            }
-        },
-        "time":{
-            "type": "f8",
-            "shape": ["time"],
-            "data":[],
-            "attributes": {
-                "units": "seconds since 1970-01-01 00:00:00",
-                "standard_name": "Time"
-            }
-         },  
-        "DSR": {
-            "type": "f4",
-            "shape": ["time"],
-            "data":[],
-            "attributes": {
-                "units": "W*m^{-2}",
-                "standard_name": "surface_downwelling_shortwave_flux_in_air",
-                "long_name": "DSR"
-            }
-        },
-        "DLR": {
-            "type": "f4",
-            "shape": ["time"],
-            "data":[],
-            "attributes": {
-                "units": "W*m^{-2}",
-                "standard_name": "surface_downwelling_longwave_flux_in_air",
-                "long_name": "DLR"
+            "Longitude"     : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          : [],
+                "attributes"    : {
+                    "units"         : "degrees_east",
+                    "long_name"     : "Longitude",
+                    "standard_name" : "Longitude",
+                    "valid_range"   : [-180.0,180.0]
+                }
+            },
+            "Latitude"      : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          : [],
+                "attributes"    : {
+                    "units"         : "degrees_north",
+                    "long_name"     : "Latitude",
+                    "standard_name" : "Latitude",
+                    "valid_range"   : [-90.0,90.0]
+                }
+            },
+            "time"          :{
+                "type"          : "f8",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "seconds since 1970-01-01 00:00:00",
+                    "standard_name" : "Time"
+                }
+            },  
+            "DSR"           : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "W*m^{-2}",
+                    "standard_name" : "surface_downwelling_shortwave_flux_in_air",
+                    "long_name"     : "DSR"
+                }
+            },
+            "DLR"           : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "W*m^{-2}",
+                    "standard_name" : "surface_downwelling_longwave_flux_in_air",
+                    "long_name" : "DLR"
+                }
             }
         }
-    }
 }
 

@@ -220,20 +220,18 @@ def write_data( args, total_df ):
             nc_file = nc_file + '_include_duplicates.nc'
             module_logger.info( "Your choise: save data include duplicates!" )
         elif ans == "n":
-            module_logger.error( "Your choise: exit the script!" )
-            #exit()
             
             total_df.drop_duplicates(subset=['DateTime [UTC]'], keep='first', inplace=True)
             module_logger.info( "Drop duplicates, kept first occurence!" )
             
             if total_df.duplicated(subset=['DateTime [UTC]']).sum() > 0:
+                module_logger.error( "Duplicates still exists" )
                 exit()
             
             # check unsorted
-            if not (total_df[DateTime ['UTC]'].is_monotonic_increasing:
+            if not (total_df['DateTime [UTC]'].is_monotonic_increasing):
                 module_logger.error( "Dataset is not sorted: no monotonic" )
                 exit()
-        
     
     
     # read json
