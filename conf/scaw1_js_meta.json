@@ -73,7 +73,8 @@
                 "attributes"    : {
                     "units"         : "W*m^{-2}",
                     "standard_name" : "surface_downwelling_shortwave_flux_in_air",
-                    "long_name"     : "DSR"
+                    "long_name"     : "DSR",
+                    "please_note"   : "Please keep note the flags: ok_flag_dsr_sun_zen, ok_flag_dsr_outlier"
                 }
             },
             "DLR"           : {
@@ -83,7 +84,58 @@
                 "attributes"    : {
                     "units"         : "W*m^{-2}",
                     "standard_name" : "surface_downwelling_longwave_flux_in_air",
-                    "long_name" : "DLR"
+                    "long_name"     : "DLR",
+                    "please_note"   : "Please keep note the flags: ok_flag_dlr_outlier"
+                }
+            },
+            "szen"           : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "degrees",
+                    "standard_name" : "solar_zenith_angle",
+                    "long_name" : "solar_zenith_angle"
+                }
+            },
+            "sazi"           : {
+                "type"          : "f4",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "degrees",
+                    "standard_name" : "solar_azimuth_angle",
+                    "long_name" : "solar_azimuth_angle"
+                }
+            },
+            "ok_flag_dsr_sun_zen"           : {
+                "type"          : "int",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "",
+                    "long_name"     : "ok_flag_dsr_sun_zen",
+                    "description"   : "flag is based on the zenith angle of the sun"
+                }
+            },
+            "ok_flag_dsr_outlier"           : {
+                "type"          : "int",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "",
+                    "long_name"     : "ok_flag_dsr_outlier",
+                    "description"   : "flag is based on the standard deviation of a rolling mean of dsr"
+                }
+            },
+            "ok_flag_dlr_outlier"           : {
+                "type"          : "int",
+                "shape"         : ["time"],
+                "data"          :[],
+                "attributes"    : {
+                    "units"         : "",
+                    "long_name"     : "ok_flag_dlr_outlier",
+                    "description"   : "flag is based on the standard deviation of a rolling mean of dlr"
                 }
             }
         }

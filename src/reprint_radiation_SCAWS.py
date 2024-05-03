@@ -246,7 +246,7 @@ def flag_sun_angle(args, total_df):
     # flag data solar night
     total_df['ok_flag_dsr_sun_zen'] = 0
     
-    total_df.loc[total_df['szen'] < 90, 'ok_flag_dsr_sun_zen'] = 1
+    total_df.loc[total_df['szen'] < args.limit_value_zenith_angle_sun_for_flagging, 'ok_flag_dsr_sun_zen'] = 1
     
    
     
@@ -261,23 +261,25 @@ def flag_sun_angle(args, total_df):
     
 ################
 def flag_outlier(args, total_df):
-    sigma = 6
-    z_dsr, avg_dsr, std_dsr, total_df["ok_flag_dsr_outlier"] = zscore(total_df["DSR"], window=86400, thresh=sigma, return_all=True)
-    z_dlr, avg_dlr, std_dlr, total_df["ok_flag_dlr_outlier"] = zscore(total_df["DLR"], window=86400, thresh=sigma, return_all=True)
+    z_dsr, avg_dsr, std_dsr, total_df["ok_flag_dsr_outlier"] = zscore(total_df["DSR"], window=86400, thresh=args.limit_value_sigma_standard_deviation_outlier_flagging, return_all=True)
+    z_dlr, avg_dlr, std_dlr, total_df["ok_flag_dlr_outlier"] = zscore(total_df["DLR"], window=86400, thresh=args.limit_value_sigma_standard_deviation_outlier_flagging, return_all=True)
     
     # if outlier flag = 0 = outlier!
     
-    module_logger.info( "Flagging dsr outlier with sigma=" + str(sigma) + ", in total flagged records: " + str( len(  total_df[ total_df["ok_flag_dsr_outlier"].map(lambda x: x==00 or x==1111) ]) ))
+    module_logger.info( "Flagging dsr outlier with sigma=" + str(args.limit_value_sigma_standard_deviation_outlier_flagging) + ", in total flagged records: " + str( len(  total_df[ total_df["ok_flag_dsr_outlier"].map(lambda x: x==00 or x==1111) ]) ))
     return total_df
     
 ################ 
 def plot_data ( args) :
-    nc_file = args.cruise + "_" + args.instrument + '.nc'
-    sigma = 6
-    print(nc_file)
-    data_xr=xr.open_dataset( nc_file, engine="netcdf4" )
-    #flagged_dsr = data_xr[data_xr["flag"] == 0]
+    nc_file = "out/" + args.cruise + "_" + args.instrument + '.nc'
     
+    module_logger.info("Read data: " + nc_file)
+    
+    data_xr=xr.open_dataset( nc_file, engine="netcdf4" )
+    
+    # extract some attrs
+    sigma           = data_xr.attrs["limit_value_sigma_standard_deviation_outlier_flagging"]
+    zenith_angle    = data_xr.attrs["limit_value_zenith_angle_sun_for_flagging"]
     
     # flagged outlier
     outlier_dsr = data_xr.where(data_xr['ok_flag_dsr_outlier'] == 0, drop=True)
@@ -360,21 +362,22 @@ def plot_data ( args) :
     ax1[2].set_ylabel('DSR flux [W*m^{-2}]', color=color)
     ax1[2].set_title("Surface downwelling shortwave flux and sun angle flags at " + args.cruise)
     lsn5=ax1[2].plot(data_xr['time'], data_xr['DSR'] , label='Shortwave radiation ', color=color)
-    lsn51=ax1[2].plot(flagged_zenith_dsr['time'], flagged_zenith_dsr['ok_flag_dsr_sun_zen'] + flagged_zenith_dsr['DSR'], marker='o', ls='',label='Flag (sun zenit angle), total flags = ' + str(len(flagged_zenith_dsr['DSR'])), color="green")
+    lsn51=ax1[2].plot(flagged_zenith_dsr['time'], flagged_zenith_dsr['ok_flag_dsr_sun_zen'] + flagged_zenith_dsr['DSR'], marker='o', ls='',label='Flag (sun zenit angle > ' + str(zenith_angle) + '), flags in total = ' + str(len(flagged_zenith_dsr['DSR'])), color="green")
     leg = lsn5 + lsn51 
     labs = [l.get_label() for l in leg]
     ax1[2].legend(leg, labs, loc=0)
     
     # plot to file
-    my_fn = args.cruise + "_" + args.instrument + ".png"
+    my_fn = "out/" + args.cruise + "_" + args.instrument + ".png"
     plt.savefig(my_fn)
+    module_logger.info("Plot data: " + my_fn)
     
 ################
 def write_data( args, total_df ):
     
     module_logger.info('Write data to file.')
     
-    nc_file = args.cruise + "_" + args.instrument + '.nc'
+    nc_file = "out/" + args.cruise + "_" + args.instrument + '.nc'
 
 
     
@@ -404,7 +407,8 @@ def write_data( args, total_df ):
     cfjson["attributes"]["geospatial_lat_max"] = total_df['Latitude'].max()
     cfjson["attributes"]["geospatial_lon_min"] = total_df['Longitude'].min()
     cfjson["attributes"]["geospatial_lon_max"] = total_df['Longitude'].max()
-    
+    cfjson["attributes"]["limit_value_zenith_angle_sun_for_flagging"] = str(args.limit_value_zenith_angle_sun_for_flagging) 
+    cfjson["attributes"]["limit_value_sigma_standard_deviation_outlier_flagging"] = str(args.limit_value_sigma_standard_deviation_outlier_flagging)
     
     del cfjson["attributes"]['geospatial_lon_max']
     
@@ -485,10 +489,12 @@ def adjust(argv):
                     help='Name of the instrument')
     parser.add_argument('--loglevel', default='INFO', dest='loglevel',
                     help="define loglevel of screen INFO (default) | WARNING | ERROR ")
-    parser.add_argument('--zenit_angle', default=90, type=int, dest='zenit_angle_used_for_flagging',
+    parser.add_argument('--zenit_angle', default=90, type=int, dest='limit_value_zenith_angle_sun_for_flagging',
                     help="define zenith angle of sun when shortwave data will get a flag (default 90 degree) ")
-    parser.add_argument('--sigma', default=6, type=int, dest='sigma_used_for_outlier_flagging',
+    parser.add_argument('--sigma', default=6, type=int, dest='limit_value_sigma_standard_deviation_outlier_flagging',
                     help="define sigma that is used for outlier flagging of a rolling window (deafult 6) ")
+    parser.add_argument("--disable-feature-processing", action="store_false",
+                    help="switch to plot only, no data processing")
     args = parser.parse_args()
     
     thisdict = {
@@ -512,6 +518,8 @@ def adjust(argv):
     
     
     
+    
+    
         
     
     # add first log mesage
@@ -529,14 +537,16 @@ if __name__ == "__main__":
     
     args, config = adjust(sys.argv[1:])
     
-    #total_df = find_scaw1_files( config )
+    if(args.disable_feature_processing):
+    
+        total_df = find_scaw1_files( config )
       
-    #total_df = handle_duplicates(args, total_df)
+        total_df = handle_duplicates(args, total_df)
 
-    #total_df = flag_sun_angle(args, total_df)
-    #total_df = flag_outlier(args, total_df)
+        total_df = flag_sun_angle(args, total_df)
+        total_df = flag_outlier(args, total_df)
 
-    #write_data(args, total_df)
+        write_data(args, total_df)
     
     plot_data(args)
 
