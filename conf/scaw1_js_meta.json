@@ -115,7 +115,7 @@
                 "attributes"    : {
                     "units"         : "",
                     "long_name"     : "ok_flag_dsr_sun_zen",
-                    "description"   : "flag is based on the zenith angle of the sun"
+                    "description"   : "flag is based on the zenith angle of the sun and represents a quality flag and should be taken into account when using dsr data"
                 }
             },
             "ok_flag_dsr_outlier"           : {
@@ -125,7 +125,7 @@
                 "attributes"    : {
                     "units"         : "",
                     "long_name"     : "ok_flag_dsr_outlier",
-                    "description"   : "flag is based on the standard deviation of a rolling mean of dsr"
+                    "description"   : "flag is based on the standard deviation of a rolling mean of dsr and represents a quality flag and should be taken into account when using dsr data"
                 }
             },
             "ok_flag_dlr_outlier"           : {
@@ -135,7 +135,7 @@
                 "attributes"    : {
                     "units"         : "",
                     "long_name"     : "ok_flag_dlr_outlier",
-                    "description"   : "flag is based on the standard deviation of a rolling mean of dlr"
+                    "description"   : "flag is based on the standard deviation of a rolling mean of dlr and represents a quality flag and should be taken into account when using dlr data"
                 }
             }
         }
