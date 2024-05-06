@@ -385,7 +385,7 @@ def write_data( args, total_df ):
     
     
     # read json
-    json_file  = os.path.dirname(os.path.realpath(__file__))  + '/../conf/scaw1_js_meta.json'
+    json_file  = os.path.dirname(os.path.realpath(__file__))  + '/../conf/scaw1_js_meta_ps122.json'
     module_logger.info('Read json metadata file to generate netCDF: ' + json_file )
     
     if not os.path.isfile( json_file ):
