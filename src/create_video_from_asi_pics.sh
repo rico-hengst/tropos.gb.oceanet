@@ -3,17 +3,10 @@
 #./create_video_from_asi_pics.dh  -s 2024-01-16 -e 2024-01-16 -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -n "*11.jpg"
 #./create_video_from_asi_pics.dh  -s 2024-05-01 -e 2024-05-06 -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -o "../out/\$(date -d \${my_date} '+/%Y/%m/%d/')"   -n "*11.jpg"
 #./create_video_from_asi_pics.dh  -s 2024-05-01 -e 2024-05-02 -t "TROPOS ACTRIS Radiation Observatory" -u "\(TARO\)" -v "OSCM, Mindelo" -w "Capo Verde" -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -o "../out/\$(date -d \${my_date} '+/%Y/%m/%d/')"   -n "*11.jpg"
+#./create_video_from_asi_pics.sh -s 2019-12-12 -e 2019-12-12 -c pic2video.config
 
-
-startdate=$(date +%Y-%m-%d)
-enddate=$startdate
-directory_in="/mydirectory/"
-directory_out="/mydirectory/"
-name="*.jpg"
-t="Institution/Project"
-u="Institution/Project"
-v="Location1"
-w="Location2"
+# set/get default 
+CONFIG_FILE=pic2video.config
 
 display_usage() { 
     echo "##############################################################################"
@@ -26,35 +19,17 @@ display_usage() {
 
 # Extract Options
 # ===============
-while getopts ":s:e:d:n:o:t:u:v:w:h" optval "$@"
+while getopts ":s:e:c:h" optval "$@"
     do
         case $optval in
             "s") # 
-                startdate="$OPTARG"
+                START_DATE="$OPTARG"
                 ;;
             "e") # YYYYMMDD
-                enddate="$OPTARG"
+                END_DATE="$OPTARG"
                 ;;
-            "d") # 
-                directory_in="$OPTARG"
-                ;;
-            "n") # 
-                name="$OPTARG"
-                ;;
-            "o") # 
-                directory_out="$OPTARG"
-                ;;
-            "t") # 
-                t="$OPTARG"
-                ;;
-            "u") # 
-                u="$OPTARG"
-                ;;
-            "v") # 
-                v="$OPTARG"
-                ;;
-            "w") # 
-                w="$OPTARG"
+            "c") # 
+                CONFIG_FILE="$OPTARG"
                 ;;
             "h")
                 # help message
@@ -62,18 +37,12 @@ while getopts ":s:e:d:n:o:t:u:v:w:h" optval "$@"
                 echo ""
                 echo "USAGE: $0  [options]"
                 echo ""
-                echo create_video_from_asi_pics.dh  -s 2024-01-14 -e 2024-01-16 -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -n "*11.jpg" -u "TROPOS TARO" -v "Capo Verde" -w "Mindelo OSCM"
+                echo create_video_from_asi_pics.dh  -s 2024-01-14 -e 2024-01-16 -c "config_file"
                 echo ""
                 echo "OPTIONS:"
-                echo "  -s <startdate>    string = 2023-01-22"
-                echo "  -e <enddate>      string = 2024-11-30"
-                echo "  -d <directory_in> string = rule to create subpath, default \"\\\${yyyy}/\\\${mm}/\\\${dd}\""
-                echo "  -n <name>         string = part of file name"
-                echo "  -o <directory_out>string = rule to create subpath, default \"\\\${yyyy}/\\\${mm}/\\\${dd}\""
-                echo "  -t <u>            string = Institution/Project, eg: TROPOS ACTRIS Radiation Observatory (TARO)"
-                echo "  -u <u>            string = Institution/Project, eg: (TARO)"
-                echo "  -v <v>            string = Location name1, eg: Capo Verde"
-                echo "  -w <w>            string = Location name2, eg: Mindelo OSCM"
+                echo "  -s <START_DATE>   string = 2023-01-22"
+                echo "  -e <END_DATE>     string = 2024-11-30"
+                echo "  -c <CONFIG_FILE>  string = relativ path to current script"
                 echo "  -h               Print help message and exit"
     
                 exit
@@ -94,13 +63,60 @@ while getopts ":s:e:d:n:o:t:u:v:w:h" optval "$@"
 done
 
 
-if [[ $startdate -lt $enddate ]]; then
-    echo "Error: startdate $startdate is taller than enddate $enddate"
+
+# check
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Error: configfile not exists: $CONFIG_FILE"
+  exit 1
+fi
+
+# check if DATES are provided, otherwise get from config
+if [[ -z "$START_DATE" || -z "$END_DATE" ]]
+then
+    echo "START_DATE or STOP_DATE are not provided"
+    echo "Get START_DATE, END_DATE from config"
+    START_DATE=$(grep -Po "START_DATE=\K.*" "pic2video.config" || true); # echo 4: $START_DATE
+    START_DATE=$(eval echo "$START_DATE"); # echo 4: $START_DATE
+
+    END_DATE=$START_DATE
+fi
+
+# get config
+
+DIRECTORY_IN=$(grep -Po "DIRECTORY_IN=\K.*" "pic2video.config" || true)
+DIRECTORY_IN=$(eval echo "$DIRECTORY_IN")
+
+DIRECTORY_OUT=$(grep -Po "DIRECTORY_OUT=\K.*" "pic2video.config" || true)
+DIRECTORY_OUT=$(eval echo "$DIRECTORY_OUT")
+
+FILENAME_IN_PATTERN=$(grep -Po "FILENAME_IN_PATTERN=\K.*" "pic2video.config" || true)
+FILENAME_IN_PATTERN=$(eval echo "$FILENAME_IN_PATTERN")
+
+FILENAME_OUT_PATTERN=$(grep -Po "FILENAME_OUT_PATTERN=\K.*" "pic2video.config" || true)
+FILENAME_OUT_PATTERN=$(eval echo "$FILENAME_OUT_PATTERN")
+
+INSTITUTION_PROJECT_1=$(grep -Po "INSTITUTION_PROJECT_1=\K.*" "pic2video.config" || true)
+INSTITUTION_PROJECT_1=$(eval echo "$INSTITUTION_PROJECT_1")
+
+INSTITUTION_PROJECT_2=$(grep -Po "INSTITUTION_PROJECT_2=\K.*" "pic2video.config" || true)
+INSTITUTION_PROJECT_2=$(eval echo "$INSTITUTION_PROJECT_2")
+
+LOCATION_1=$(grep -Po "LOCATION_1=\K.*" "pic2video.config" || true)
+LOCATION_1=$(eval echo "$LOCATION_1")
+
+LOCATION_2=$(grep -Po "LOCATION_2=\K.*" "pic2video.config" || true)
+LOCATION_2=$(eval echo "$LOCATION_2")
+
+
+# check
+if [[ $START_DATE -lt $END_DATE ]]; then
+    echo "Error: startdate $START_DATE is taller than enddate $END_DATE"
     exit 1
 fi
 
-if [[ $directory_in == $directory_out ]]; then
-    echo "Error: directory_in and directory_out are equal!!??"
+# check
+if [[ $DIRECTORY_IN == $DIRECTORY_OUT ]]; then
+    echo "Error: DIRECTORY_IN and DIRECTORY_OUT are equal!!??"
     exit 1
 fi
 
@@ -110,23 +126,20 @@ echo $directory
 my_loop () {
     # get args
     my_date=$1
-    directory_in=$2
-    name=$3
+    DIRECTORY_IN=$2
 
-    full_directory_in=$(eval echo "$directory_in")
-    full_directory_out=$(eval echo "$directory_out")
-      
-    echo $full_directory_out
+    full_directory_in=$(eval echo "$DIRECTORY_IN")
+    full_directory_out=$(eval echo "$DIRECTORY_OUT")
       
     # check if directory exists
     if [[ ! -d ${full_directory_in} ]]; then
-        echo "Warning: directory_in not exists: ${full_directory_in}"
+        echo "Warning: DIRECTORY_IN not exists: ${full_directory_in}"
     else
-        number_of_files=$(find ${full_directory_in} -maxdepth 1 -name "${name}" -printf 1 | wc -c)
+        number_of_files=$(find ${full_directory_in} -maxdepth 1 -name ${FILENAME_IN_PATTERN} -printf 1 | wc -c)
   
         if [[ $number_of_files -lt 2 ]]; then
             echo "Warning: no files found at: ${full_directory_in}"
-      
+            exit
         else
             # create subdir
             if [[ ! -d ${full_directory_out} ]]; then
@@ -134,43 +147,31 @@ my_loop () {
                 mkdir -p ${full_directory_out}
                 echo "INFO: directory_out created: ${full_directory_out}"
             fi
-    
-        video_filename="${full_directory_out}${my_date}.mp4"
+            echo "INFO: in total number of pics found: $number_of_files"
       
-        cat $(find ${full_directory_in} -maxdepth 1 -name "${name}" | sort -V) | \
-        #ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
-        #drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$u':fontsize=50:fontcolor=white:x=10:y=65,\
-        #drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$v':fontsize=35:fontcolor=white:x=10:y=125,\
-        #drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$w':fontsize=35:fontcolor=white:x=10:y=170,\
-        #fade=type=in:duration=2:start_time=0,\
-        #scale=720:-1" $video_filename
+        video_filename="${full_directory_out}${my_date}${FILENAME_OUT_PATTERN}"
         
-        
+        echo "INFO: Create video : $video_filename"
+
+        cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
+             
         ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$t':fontsize=36:fontcolor=white:x=10:y=51,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$u':fontsize=36:fontcolor=white:x=10:y=100,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$v':fontsize=35:fontcolor=white:x=1620:y=51,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$w':fontsize=36:fontcolor=white:x=1620:y=100,\
+        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$INSTITUTION_PROJECT_1':fontsize=36:fontcolor=white:x=10:y=51,\
+        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$INSTITUTION_PROJECT_2':fontsize=36:fontcolor=white:x=10:y=100,\
+        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$LOCATION_1':fontsize=35:fontcolor=white:x=1620:y=51,\
+        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$LOCATION_2':fontsize=36:fontcolor=white:x=1620:y=100,\
         fade=type=in:duration=2:start_time=0,\
         scale=720:-1" $video_filename
+        
         fi
     fi
   
-  
-  
 }
 
-while ! [[ $startdate > $enddate ]]; do
-    echo $startdate
+while ! [[ $START_DATE > $END_DATE ]]; do
+    echo $START_DATE
     
-    my_loop $startdate "$directory_in" $name
+    my_loop $START_DATE "$DIRECTORY_IN" 
     
-    startdate=$(date -d "$startdate + 1 day" +%F)
+    START_DATE=$(date -d "$START_DATE + 1 day" +%F)
 done
-
-
-
-#cat $(find /data/level0/all_sky_imager/asi16_oscm/2024/01/14/ -maxdepth 1 -name "*_11.jpg" | sort -V) | ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='TROPOS TARO':fontsize=50:fontcolor=white:x=10:y=65,\
-#drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='Cabo Verde, Mindelo, OSCM':fontsize=35:fontcolor=white:x=10:y=125,\
-#fade=type=in:duration=2:start_time=0,\
-#scale=720:-1" outputq2.mp4 
