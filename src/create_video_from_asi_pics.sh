@@ -6,7 +6,9 @@
 #./create_video_from_asi_pics.sh -s 2019-12-12 -e 2019-12-12 -c pic2video.config
 
 # set/get default 
-CONFIG_FILE=pic2video.config
+CONFIG_FILE="../conf/pic2video.config"
+
+echo $CONFIG_FILE
 
 display_usage() { 
     echo "##############################################################################"
@@ -83,28 +85,28 @@ fi
 
 # get config
 
-DIRECTORY_IN=$(grep -Po "DIRECTORY_IN=\K.*" "pic2video.config" || true)
+DIRECTORY_IN=$(grep -Po "DIRECTORY_IN=\K.*" "$CONFIG_FILE" || true)
 DIRECTORY_IN=$(eval echo "$DIRECTORY_IN")
 
-DIRECTORY_OUT=$(grep -Po "DIRECTORY_OUT=\K.*" "pic2video.config" || true)
+DIRECTORY_OUT=$(grep -Po "DIRECTORY_OUT=\K.*" "$CONFIG_FILE" || true)
 DIRECTORY_OUT=$(eval echo "$DIRECTORY_OUT")
 
-FILENAME_IN_PATTERN=$(grep -Po "FILENAME_IN_PATTERN=\K.*" "pic2video.config" || true)
+FILENAME_IN_PATTERN=$(grep -Po "FILENAME_IN_PATTERN=\K.*" "$CONFIG_FILE" || true)
 FILENAME_IN_PATTERN=$(eval echo "$FILENAME_IN_PATTERN")
 
-FILENAME_OUT_PATTERN=$(grep -Po "FILENAME_OUT_PATTERN=\K.*" "pic2video.config" || true)
+FILENAME_OUT_PATTERN=$(grep -Po "FILENAME_OUT_PATTERN=\K.*" "$CONFIG_FILE" || true)
 FILENAME_OUT_PATTERN=$(eval echo "$FILENAME_OUT_PATTERN")
 
-INSTITUTION_PROJECT_1=$(grep -Po "INSTITUTION_PROJECT_1=\K.*" "pic2video.config" || true)
+INSTITUTION_PROJECT_1=$(grep -Po "INSTITUTION_PROJECT_1=\K.*" "$CONFIG_FILE" || true)
 INSTITUTION_PROJECT_1=$(eval echo "$INSTITUTION_PROJECT_1")
 
-INSTITUTION_PROJECT_2=$(grep -Po "INSTITUTION_PROJECT_2=\K.*" "pic2video.config" || true)
+INSTITUTION_PROJECT_2=$(grep -Po "INSTITUTION_PROJECT_2=\K.*" "$CONFIG_FILE" || true)
 INSTITUTION_PROJECT_2=$(eval echo "$INSTITUTION_PROJECT_2")
 
-LOCATION_1=$(grep -Po "LOCATION_1=\K.*" "pic2video.config" || true)
+LOCATION_1=$(grep -Po "LOCATION_1=\K.*" "$CONFIG_FILE" || true)
 LOCATION_1=$(eval echo "$LOCATION_1")
 
-LOCATION_2=$(grep -Po "LOCATION_2=\K.*" "pic2video.config" || true)
+LOCATION_2=$(grep -Po "LOCATION_2=\K.*" "$CONFIG_FILE" || true)
 LOCATION_2=$(eval echo "$LOCATION_2")
 
 
