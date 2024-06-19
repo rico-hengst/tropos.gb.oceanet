@@ -1,18 +1,23 @@
 #!/bin/bash -e
 
-#./create_video_from_asi_pics.dh  -s 2024-01-16 -e 2024-01-16 -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -n "*11.jpg"
-#./create_video_from_asi_pics.dh  -s 2024-05-01 -e 2024-05-06 -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -o "../out/\$(date -d \${my_date} '+/%Y/%m/%d/')"   -n "*11.jpg"
-#./create_video_from_asi_pics.dh  -s 2024-05-01 -e 2024-05-02 -t "TROPOS ACTRIS Radiation Observatory" -u "\(TARO\)" -v "OSCM, Mindelo" -w "Capo Verde" -d "/data/level0/all_sky_imager/asi16_oscm/\$(date -d \${my_date} '+/%Y/%m/%d/')" -o "../out/\$(date -d \${my_date} '+/%Y/%m/%d/')"   -n "*11.jpg"
 #./create_video_from_asi_pics.sh -s 2019-12-12 -e 2019-12-12 -c pic2video.config
+
+#################################################################################
+#Script Name	: create_video_from_asi_pics.sh                                                                                    
+#Description	: The script creates a timelapse (video) from pics in a directory                                                                          
+#Args           : configfile, optional(startdate, enddate)                                                                                   
+#Author       	: Rico Hengst                                                                                       
+#################################################################################
+
+
 
 # set/get default 
 CONFIG_FILE="../conf/pic2video.config"
 
-echo $CONFIG_FILE
 
 display_usage() { 
     echo "##############################################################################"
-    echo "### The script creates a video from pics in a directory" 
+    echo "### The script creates a timelapse (video) from pics in a directory" 
     echo "###"
     echo "### Assumption 1: ffmpeg is installed"
     echo "### Assumption 2: pic files are jpeg"
@@ -77,13 +82,13 @@ if [[ -z "$START_DATE" || -z "$END_DATE" ]]
 then
     echo "START_DATE or STOP_DATE are not provided"
     echo "Get START_DATE, END_DATE from config"
-    START_DATE=$(grep -Po "START_DATE=\K.*" "pic2video.config" || true); # echo 4: $START_DATE
+    START_DATE=$(grep -Po "START_DATE=\K.*" "$CONFIG_FILE" || true); # echo 4: $START_DATE
     START_DATE=$(eval echo "$START_DATE"); # echo 4: $START_DATE
 
     END_DATE=$START_DATE
 fi
 
-# get config
+# get config content
 
 DIRECTORY_IN=$(grep -Po "DIRECTORY_IN=\K.*" "$CONFIG_FILE" || true)
 DIRECTORY_IN=$(eval echo "$DIRECTORY_IN")
@@ -97,17 +102,17 @@ FILENAME_IN_PATTERN=$(eval echo "$FILENAME_IN_PATTERN")
 FILENAME_OUT_PATTERN=$(grep -Po "FILENAME_OUT_PATTERN=\K.*" "$CONFIG_FILE" || true)
 FILENAME_OUT_PATTERN=$(eval echo "$FILENAME_OUT_PATTERN")
 
-INSTITUTION_PROJECT_1=$(grep -Po "INSTITUTION_PROJECT_1=\K.*" "$CONFIG_FILE" || true)
-INSTITUTION_PROJECT_1=$(eval echo "$INSTITUTION_PROJECT_1")
+TEXT_TOP_LEFT_1=$(grep -Po "TEXT_TOP_LEFT_1=\K.*" "$CONFIG_FILE" || true)
+TEXT_TOP_LEFT_1=$(eval echo "$TEXT_TOP_LEFT_1")
 
-INSTITUTION_PROJECT_2=$(grep -Po "INSTITUTION_PROJECT_2=\K.*" "$CONFIG_FILE" || true)
-INSTITUTION_PROJECT_2=$(eval echo "$INSTITUTION_PROJECT_2")
+TEXT_TOP_LEFT_2=$(grep -Po "TEXT_TOP_LEFT_2=\K.*" "$CONFIG_FILE" || true)
+TEXT_TOP_LEFT_2=$(eval echo "$TEXT_TOP_LEFT_2")
 
-LOCATION_1=$(grep -Po "LOCATION_1=\K.*" "$CONFIG_FILE" || true)
-LOCATION_1=$(eval echo "$LOCATION_1")
+TEXT_TOP_RIGHT_1=$(grep -Po "TEXT_TOP_RIGHT_1=\K.*" "$CONFIG_FILE" || true)
+TEXT_TOP_RIGHT_1=$(eval echo "$TEXT_TOP_RIGHT_1")
 
-LOCATION_2=$(grep -Po "LOCATION_2=\K.*" "$CONFIG_FILE" || true)
-LOCATION_2=$(eval echo "$LOCATION_2")
+TEXT_TOP_RIGHT_2=$(grep -Po "TEXT_TOP_RIGHT_2=\K.*" "$CONFIG_FILE" || true)
+TEXT_TOP_RIGHT_2=$(eval echo "$TEXT_TOP_RIGHT_2")
 
 
 # check
@@ -151,19 +156,25 @@ my_loop () {
             fi
             echo "INFO: in total number of pics found: $number_of_files"
       
-        video_filename="${full_directory_out}${my_date}${FILENAME_OUT_PATTERN}"
-        
-        echo "INFO: Create video : $video_filename"
+            video_filename="${full_directory_out}${my_date}${FILENAME_OUT_PATTERN}"
+            
+            if [[ -f ${video_filename} ]]; then
+                echo "Warning: video file already exist: ${video_filename}"
+                echo "Warning: video will be deleted ..."
+                rm ${video_filename}
+            fi
+            
+            echo "INFO: Create video : $video_filename"
 
-        cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
-             
-        ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$INSTITUTION_PROJECT_1':fontsize=36:fontcolor=white:x=10:y=51,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$INSTITUTION_PROJECT_2':fontsize=36:fontcolor=white:x=10:y=100,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$LOCATION_1':fontsize=35:fontcolor=white:x=1620:y=51,\
-        drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$LOCATION_2':fontsize=36:fontcolor=white:x=1620:y=100,\
-        fade=type=in:duration=2:start_time=0,\
-        scale=720:-1" $video_filename
+            cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
+                 
+            ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
+            drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_1':fontsize=36:fontcolor=white:x=10:y=51,\
+            drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_2':fontsize=36:fontcolor=white:x=10:y=100,\
+            drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$TEXT_TOP_RIGHT_1':fontsize=35:fontcolor=white:x=1620:y=51,\
+            drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_RIGHT_2':fontsize=36:fontcolor=white:x=1620:y=100,\
+            fade=type=in:duration=2:start_time=0,\
+            scale=720:-1" $video_filename
         
         fi
     fi
