@@ -1,6 +1,10 @@
 #!/bin/bash -e
 
-#./create_video_from_asi_pics.sh -s 2019-12-12 -e 2019-12-12 -c pic2video.config
+# create a timelapse video from yesterday
+#./create_video_from_asi_pics.sh -c pic2video.config
+
+# create timelapse videos within a given period
+#./create_video_from_asi_pics.sh -s 2023-12-12 -e 2023-12-22 -c pic2video.config 
 
 #################################################################################
 #Script Name	: create_video_from_asi_pics.sh                                                                                    
@@ -47,9 +51,9 @@ while getopts ":s:e:c:h" optval "$@"
                 echo create_video_from_asi_pics.dh  -s 2024-01-14 -e 2024-01-16 -c "config_file"
                 echo ""
                 echo "OPTIONS:"
-                echo "  -s <START_DATE>   string = 2023-01-22"
-                echo "  -e <END_DATE>     string = 2024-11-30"
-                echo "  -c <CONFIG_FILE>  string = relativ path to current script"
+                echo "  -s <START_DATE>  optional   string = 2023-01-22"
+                echo "  -e <END_DATE>    optional   string = 2024-11-30"
+                echo "  -c <CONFIG_FILE> mandatory  string = "
                 echo "  -h               Print help message and exit"
     
                 exit
@@ -70,8 +74,7 @@ while getopts ":s:e:c:h" optval "$@"
 done
 
 
-
-# check
+# check config file
 if [[ ! -f "$CONFIG_FILE" ]]; then
   echo "Error: configfile not exists: $CONFIG_FILE"
   exit 1
@@ -88,8 +91,8 @@ then
     END_DATE=$START_DATE
 fi
 
-# get config content
 
+# get config content
 DIRECTORY_IN=$(grep -Po "DIRECTORY_IN=\K.*" "$CONFIG_FILE" || true)
 DIRECTORY_IN=$(eval echo "$DIRECTORY_IN")
 
@@ -154,6 +157,7 @@ my_loop () {
                 mkdir -p ${full_directory_out}
                 echo "INFO: directory_out created: ${full_directory_out}"
             fi
+            
             echo "INFO: in total number of pics found: $number_of_files"
       
             video_filename="${full_directory_out}${my_date}${FILENAME_OUT_PATTERN}"
@@ -165,15 +169,17 @@ my_loop () {
             fi
             
             echo "INFO: Create video : $video_filename"
-
+            
+            # find files in directory and sort
             cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
-                 
+            
+            # generate video
             ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
             drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_1':fontsize=36:fontcolor=white:x=10:y=51,\
             drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_2':fontsize=36:fontcolor=white:x=10:y=100,\
             drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$TEXT_TOP_RIGHT_1':fontsize=35:fontcolor=white:x=1620:y=51,\
             drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_RIGHT_2':fontsize=36:fontcolor=white:x=1620:y=100,\
-            fade=type=in:duration=2:start_time=0,\
+            fade=type=in:duration=0.5:start_time=0,\
             scale=720:-1" $video_filename
         
         fi
