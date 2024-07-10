@@ -116,6 +116,9 @@ TEXT_TOP_LEFT_1=$(eval echo "$TEXT_TOP_LEFT_1")
 TEXT_TOP_LEFT_2=$(grep -Po "TEXT_TOP_LEFT_2=\K.*" "$CONFIG_FILE" || true)
 TEXT_TOP_LEFT_2=$(eval echo "$TEXT_TOP_LEFT_2")
 
+LOCAL_COMPUTER_FONTFILE=$(grep -Po "LOCAL_COMPUTER_FONTFILE=\K.*" "$CONFIG_FILE" || true)
+LOCAL_COMPUTER_FONTFILE=$(eval echo "$LOCAL_COMPUTER_FONTFILE")
+
 TEXT_TOP_RIGHT_1=$(grep -Po "TEXT_TOP_RIGHT_1=\K.*" "$CONFIG_FILE" || true)
 TEXT_TOP_RIGHT_1=$(eval echo "$TEXT_TOP_RIGHT_1")
 
@@ -159,7 +162,7 @@ my_loop () {
   
         if [[ $number_of_files -lt 2 ]]; then
             echo "Warning: no files found at: ${full_directory_in}"
-            exit
+            #exit
         else
             # create subdir
             if [[ ! -d ${full_directory_out} ]]; then
@@ -179,41 +182,38 @@ my_loop () {
             fi
             
             echo "INFO: Create video : $video_filename"
-            
-            # find files in directory and sort
+ 
             cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
-            
             # generate video
             if [ "$INCLUDE_LOGO" = "y" ]; then
-            
-                ffmpeg -framerate 20 -i - -i ${SCRIPTPATH}/logo/TROPOS-Logo_ENG_full_white2.png -i ${SCRIPTPATH}/logo/cc-by-sa.png -vcodec libx264 -filter_complex "\
-                [0:v]\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_1':fontsize=36:fontcolor=white:x=10:y=51,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_2':fontsize=36:fontcolor=white:x=10:y=100,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$TEXT_TOP_RIGHT_1':fontsize=35:fontcolor=white:x=1620:y=51,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_RIGHT_2':fontsize=36:fontcolor=white:x=1620:y=100,\
-                fade=type=in:duration=0.5:start_time=0,\
-                scale=720:-1\
+                ffmpeg -framerate 20 -f image2pipe -i - -i ${SCRIPTPATH}/logo/TROPOS-Logo_ENG_full_white2.png -i ${SCRIPTPATH}/logo/cc-by-sa.png -vcodec libx264 -filter_complex "\
+                [0:v] \
+                scale=720:-1, \
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='%{metadata\:DateTime\:}':fontsize=10:fontcolor=white:x=W-5-text_w:y=20, \
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=16:fontcolor=white:x=5:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=16:fontcolor=white:x=5:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=16:fontcolor=white:x=W-5-text_w:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=16:fontcolor=white:x=W-5-text_w:y=50,\
+                fade=type=in:duration=0.25:start_time=0\
                 [addthetext];
-                [1]scale=150:-1[scaledwatermark];
-                [2]scale=90:-1[scaledlicence];
-                [addthetext][scaledwatermark]overlay=W-160:H-60[textandlogo];
-                [textandlogo][scaledlicence]overlay=10:H-35[myfin]" \
+                [1]scale=-1:30[scaledwatermark];
+                [2]scale=-1:20[scaledlicence];
+                [addthetext][scaledwatermark]overlay=W-5-overlay_w:H-5-overlay_h[textandlogo];
+                [textandlogo][scaledlicence]overlay=0+5:H-5-overlay_h[myfin]" \
                 -map "[myfin]" $video_filename
-                
             else
-            
-                ffmpeg -framerate 20 -i - -vcodec libx264 -filter_complex "\
-                [0:v]\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_1':fontsize=36:fontcolor=white:x=10:y=51,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_LEFT_2':fontsize=36:fontcolor=white:x=10:y=100,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf':text='$TEXT_TOP_RIGHT_1':fontsize=35:fontcolor=white:x=1620:y=51,\
-                drawtext=fontfile='/usr/share/fonts/dejavu/DejaVuSansCondensed.ttf':text='$TEXT_TOP_RIGHT_2':fontsize=36:fontcolor=white:x=1620:y=100,\
-                fade=type=in:duration=0.5:start_time=0,\
-                scale=720:-1\
-                [addthetext];"\
+            	#cat $(find ${full_directory_in} -maxdepth 1 -name "${FILENAME_IN_PATTERN}" | sort -V) | \
+                ffmpeg -framerate 20 -f image2pipe -i - -vcodec libx264 -filter_complex "\
+                [0:v] \
+		scale=720:-1, \
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='%{metadata\:DateTime\:}':fontsize=10:fontcolor=white:x=W-5-text_w:y=20, \
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=16:fontcolor=white:x=5:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=16:fontcolor=white:x=5:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=16:fontcolor=white:x=W-5-text_w:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=16:fontcolor=white:x=W-5-text_w:y=50,\
+                fade=type=in:duration=0.25:start_time=0\
+                [addthetext] "\
                 -map "[addthetext]" $video_filename
-            
             fi
         
         fi
