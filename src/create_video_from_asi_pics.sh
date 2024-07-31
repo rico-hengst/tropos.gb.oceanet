@@ -85,6 +85,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
   exit 1
 fi
 
+
 # check if DATES are provided, otherwise get from config
 if [[ -z "$START_DATE" || -z "$END_DATE" ]]
 then
@@ -131,10 +132,16 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 #echo $SCRIPTPATH
 
 
-# check
+# check start end date, transform to integer
+# https://unix.stackexchange.com/questions/232384/argument-string-to-integer-in-bash
+#$(($START_DATE + 0))
+#$(($END_DATE + 0))
 if [[ $START_DATE -lt $END_DATE ]]; then
+#if [[ (($START_DATE + 0)) -lt (($END_DATE + 0)) ]]; then
     echo "Error: startdate $START_DATE is taller than enddate $END_DATE"
     exit 1
+else
+    echo "Loop timelapse creation: startdate $START_DATE to enddate $END_DATE"
 fi
 
 # check
@@ -189,11 +196,11 @@ my_loop () {
                 ffmpeg -framerate 20 -f image2pipe -i - -i ${SCRIPTPATH}/logo/TROPOS-Logo_ENG_full_white2.png -i ${SCRIPTPATH}/logo/cc-by-sa.png -vcodec libx264 -filter_complex "\
                 [0:v] \
                 scale=720:-1, \
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='%{metadata\:DateTime\:}':fontsize=10:fontcolor=white:x=W-5-text_w:y=20, \
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=16:fontcolor=white:x=5:y=30,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=16:fontcolor=white:x=5:y=50,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=16:fontcolor=white:x=W-5-text_w:y=30,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=16:fontcolor=white:x=W-5-text_w:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='%{metadata\:DateTime\:}':fontsize=10:fontcolor=white:x=W-5-text_w:y=5, \
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=15:fontcolor=white:x=5:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=15:fontcolor=white:x=5:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=15:fontcolor=white:x=W-5-text_w:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=15:fontcolor=white:x=W-5-text_w:y=50,\
                 fade=type=in:duration=0.25:start_time=0\
                 [addthetext];
                 [1]scale=-1:30[scaledwatermark];
@@ -207,10 +214,10 @@ my_loop () {
                 [0:v] \
 		scale=720:-1, \
                 drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='%{metadata\:DateTime\:}':fontsize=10:fontcolor=white:x=W-5-text_w:y=20, \
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=16:fontcolor=white:x=5:y=30,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=16:fontcolor=white:x=5:y=50,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=16:fontcolor=white:x=W-5-text_w:y=30,\
-                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=16:fontcolor=white:x=W-5-text_w:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_1':fontsize=15:fontcolor=white:x=5:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_LEFT_2':fontsize=15:fontcolor=white:x=5:y=50,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_1':fontsize=15:fontcolor=white:x=W-5-text_w:y=30,\
+                drawtext=fontfile='$LOCAL_COMPUTER_FONTFILE':text='$TEXT_TOP_RIGHT_2':fontsize=15:fontcolor=white:x=W-5-text_w:y=50,\
                 fade=type=in:duration=0.25:start_time=0\
                 [addthetext] "\
                 -map "[addthetext]" $video_filename
